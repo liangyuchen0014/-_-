@@ -10,7 +10,7 @@ class User(AbstractUser):
     name = models.CharField(max_length=255, null=True)  # 工作人员个人姓名或客户联系人姓名
     description = models.TextField(blank=True, null=True)
     type = models.IntegerField(default=0)  # 0:客户  1:水  2:电  3:机械  -1:管理人员
-    is_available = models.IntegerField(default=0)  # 0:空闲  1:不空闲
+    is_available = models.IntegerField(default=0)  # 1:空闲  0:不空闲
     head_url = models.TextField(blank=True, null=True)
 
     def get_info(self):
