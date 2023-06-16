@@ -24,6 +24,7 @@ class User(AbstractUser):
             'company': self.company,
             'phone': self.phone,
             'description': self.description,
+            'post': self.post,
             'type': self.type,
             'is_available': self.is_available,
             'head_url': self.head_url
