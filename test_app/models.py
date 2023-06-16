@@ -50,3 +50,17 @@ class Wiki(models.Model):
     id = models.AutoField(primary_key=True)
     description = models.TextField(blank=True, null=True)  # 问题描述
     solution = models.TextField(blank=True, null=True)  # 解决方法
+
+
+class Room(models.Model):
+    id = models.AutoField(primary_key=True)
+    number = models.CharField(max_length=255, null=True)  # 房间号（四位，如1001）
+
+
+class Lease(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey('User', on_delete=models.DO_NOTHING)  # 客户id(外键)
+    room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING)  # 房间id(外键)
+    start_time = models.CharField(max_length=255, null=True)  # 起租时间
+    end_time = models.CharField(max_length=255, null=True)  # 终止时间
+    contract_time = models.CharField(max_length=255, null=True)  # 签约时间
