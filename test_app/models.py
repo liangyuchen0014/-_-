@@ -31,8 +31,7 @@ class User(AbstractUser):
 
 class Payment(models.Model):
     id = models.AutoField(primary_key=True)
-    # TODO
-    rent_id = models.ForeignKey('', on_delete=models.DO_NOTHING)  # 租赁信息id
+    lease_id = models.ForeignKey('Lease', on_delete=models.DO_NOTHING)  # 租赁信息id
     time = models.CharField(max_length=255, null=True)
 
 
