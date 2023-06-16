@@ -9,8 +9,9 @@ class User(AbstractUser):
     phone = models.CharField(max_length=255, null=True)  # 电话
     name = models.CharField(max_length=255, null=True)  # 工作人员个人姓名或客户联系人姓名
     description = models.TextField(blank=True, null=True)
+    post = models.CharField(max_length=255, null=True)  # 岗位
     type = models.IntegerField(default=0)  # 0:客户  1:水  2:电  3:机械  -1:管理人员
-    is_available = models.IntegerField(default=0)  # 0:空闲  1:不空闲
+    is_available = models.IntegerField(default=0)  # 0:不空闲  1:空闲
     head_url = models.TextField(blank=True, null=True)
 
     def get_info(self):
@@ -23,6 +24,7 @@ class User(AbstractUser):
             'company': self.company,
             'phone': self.phone,
             'description': self.description,
+            'post': self.post,
             'type': self.type,
             'is_available': self.is_available,
             'head_url': self.head_url
@@ -60,6 +62,7 @@ class Lease(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey('User', on_delete=models.DO_NOTHING)  # 客户id(外键)
     room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING)  # 房间id(外键)
+    room_number = models.CharField(max_length=255, null=True)  # 房间号（四位，如1001）
     start_time = models.CharField(max_length=255, null=True)  # 起租时间
     end_time = models.CharField(max_length=255, null=True)  # 终止时间
     contract_time = models.CharField(max_length=255, null=True)  # 签约时间
