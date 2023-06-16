@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-
+'''
 class User(models.Model):
     user_id = models.AutoField(primary_key=True)
     description = models.TextField(blank=True, null=True)
@@ -17,6 +17,7 @@ class User(models.Model):
             'state': self.state,
             'head_url': self.head_url
         }
+'''
 
 
 class Client(models.Model):
@@ -26,3 +27,10 @@ class Client(models.Model):
     contact_name = models.CharField(max_length=255)  # 联系人姓名
     phone = models.IntegerField(default=0)  # 电话
 
+
+class Staff(models.Model):
+    id = models.AutoField(primary_key=True)  # id
+    name = models.CharField(max_length=255)  # 工作人员个人姓名
+    phone = models.IntegerField(default=0)  # 电话
+    fix_type = models.IntegerField(default=0)  # 0:管理人员  1:水  2:电  3:机械
+    is_valiable = models.IntegerField(default=0)  #  0:空闲  1:不空闲
