@@ -98,18 +98,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'qunxing',
         'USER': 'qunxing',
-        'PASSWORD': 'qunxing', # if之前填入正式端的密码，else之后填入测试端的密码，下一个属性同理
+        'PASSWORD': 'qunxing',  # if之前填入正式端的密码，else之后填入测试端的密码，下一个属性同理
         'HOST': '10.251.252.218',
         'PORT': '3306',
-    },
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'qunxing_backend',
-    #     'USER': 'root',
-    #     'PASSWORD': 'Buaa123456',
-    #     'HOST': '*.*.*.*',
-    #     'PORT': '3306',
-    # }
+    }
 }
 
 # Password validation
