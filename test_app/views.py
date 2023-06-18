@@ -147,7 +147,7 @@ def forget_password(request):
     usr = User.objects.filter(email=email).first()
     if not usr:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    r = redis.Redis(host='localhost', port=6379, db=0)
+    r = redis.RedisCacheClient(host='localhost', port=6379, db=0)
     sms_code = r.get(email)
     if rand_code != sms_code:
         return JsonResponse({'errno': 1004, 'msg': "验证码错误"})
@@ -170,9 +170,82 @@ def send_email_code(request):
     # 生成邮箱验证码
     sms_code = '%06d' % random.randint(0, 999999)
 
-    r = redis.Redis(host='localhost', port=6379, db=0)
+    r = redis.RedisCacheClient(host='localhost', port=6379, db=0)
     r.set(email, sms_code, 60 * 5)
     status = send_sms_code(email, sms_code)
     if status != 0:
         return JsonResponse({'errno': 1004, 'msg': "验证码发送失败"})
     return JsonResponse({'errno': 0, 'msg': "验证码发送成功"})
+
+
+# 客户报修
+@csrf_exempt
+def repair(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    user_id = request.POST.get('user_id')
+    user = User.objects.filter(user_id=user_id).first()
+    if not user:
+        return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    name = request.POST.get('name')
+    phone = request.POST.get('phone')
+    room_id = request.POST.get('rid')
+    r_type = request.POST.get('type')
+    description = request.POST.get('description')
+    repair_time = request.POST.get('repair_time')
+    if not all([user_id, name, phone, room_id, type, description, repair_time]):
+        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+    new_repair_form = RepairForm.objects.create(user_id=user_id, name=name, phone=phone, room_id=room_id, type=r_type,
+                                                description=description, repair_time=repair_time)
+    new_repair_form.save()
+    return JsonResponse({'errno': 0, 'msg': "报修成功"})
+
+
+# 客户查看报修申请记录
+@csrf_exempt
+def myRepair(request):
+    if request.method != 'GET':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    user_id = request.GET.get('user_id')
+    user = User.objects.filter(user_id=user_id).first()
+    if not user:
+        return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    repair_form = RepairForm.objects.filter(user_id=user_id)
+    data = []
+    for form in repair_form:
+        res = form.get_info()
+        ret = {
+            'wid': res['id'],
+            'rid': res['room_id'],
+            'type': res['type'],
+            'repair_time': res['repair_time'],
+            'maintain_time': res['maintain_time'],
+            'status': res['status'],
+            'maintainer_name': res['maintainer_name'],
+            'maintainer_phone': res['maintainer_phone'],
+            'description': res['description'],
+        }
+        data.append(ret)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+# 维修工查看维修任务列表
+@csrf_exempt
+def repairService(request):
+    if request.method != 'GET':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    user_id = request.GET.get('user_id')
+    user = User.objects.filter(user_id=user_id).first()
+    if not user:
+        return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    repair_form = RepairForm.objects.filter(maintainer_id=user_id)
+    data = []
+    for form in repair_form:
+        res = form.get_info()
+        ret = {
+            'wid': res['id'],
+            'repair_time': res['repair_time'],
+            'status': res['status']
+        }
+        data.append(ret)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})

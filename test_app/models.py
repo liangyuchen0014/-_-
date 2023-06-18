@@ -88,3 +88,28 @@ class RepairForm(models.Model):
     solve_time = models.CharField(max_length=255, null=True)  # 解决时间
     solver_name = models.CharField(max_length=255, null=True)  # 解决人员姓名
     solver_id = models.CharField(max_length=255, null=True)  # 解决人员id
+    status = models.IntegerField(default=0)  # 0-未处理 1-进行中 2-已完成
+
+    def get_info(self):
+        return {
+            'id': self.id,
+            'description': self.description,
+            'type': self.type,
+            'repair_time': self.repair_time,
+            'room_number': self.room_number,
+            'room_id': self.room_id,
+            'company_name': self.company_name,
+            'company_id': self.company_id,
+            'contact_name': self.contact_name,
+            'contact_phone': self.contact_phone,
+            'maintain_time': self.maintain_time,
+            'maintainer_name': self.maintainer_name,
+            'maintainer_id': self.maintainer_id,
+            'maintainer_phone': self.maintainer_phone,
+            'feedback_time': self.feedback_time,
+            'solution': self.solution,
+            'solve_time': self.solve_time,
+            'solver_name': self.solver_name,
+            'solver_id': self.solver_id,
+            'status': self.status
+        }
