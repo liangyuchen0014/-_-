@@ -1,17 +1,14 @@
 import random
 import time
-import datetime
 
 from django.contrib.auth import authenticate, login
-from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework_jwt.settings import api_settings
 from django_redis import get_redis_connection
+from rest_framework_jwt.settings import api_settings
 
 from test_app.message import send_sms_code
 from test_app.models import *
-from qunxing_backend.settings import EMAIL_HOST_USER
 
 
 @csrf_exempt
@@ -67,25 +64,6 @@ def decode_token(token):
     if r['exp'] < time.time():
         return -1
     return r['user_id']
-
-
-@csrf_exempt
-def email_send(request):
-    if request.method != 'POST':
-        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    email = request.POST.get('email')
-    rand_code = request.POST.get('rand_code')
-    message = "您的验证码是" + rand_code + ", 请尽快完成您的信息验证。"
-    if not all([email, rand_code]):
-        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
-    try:
-        send_mail('群星闪耀时', message, EMAIL_HOST_USER, [email], fail_silently=False)
-        return JsonResponse(
-            {'errno': 0, 'msg': "验证码已发送"})
-    except:
-        # traceback.print_exc()
-        return JsonResponse(
-            {'errno': 1004, 'msg': "验证码发送失败"})
 
 
 @csrf_exempt
