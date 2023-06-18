@@ -335,4 +335,3 @@ def get_room_status(request):
             t['Company'] = lease.user_id.company
         r.append(t)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
-
