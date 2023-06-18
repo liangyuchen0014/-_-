@@ -1,5 +1,6 @@
 import random
 import time
+from datetime import datetime
 
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
@@ -303,3 +304,35 @@ def repairComplete(request):
     repair_form.status = 2
     repair_form.save()
     return JsonResponse({'errno': 0, 'msg': "提交成功"})
+
+
+@csrf_exempt
+def get_room_status(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    level = request.POST.get('level')
+    if not level:
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    now = int(time.time())
+    rooms = Room.objects.filter(level=level).all()
+    r = []
+    for room in rooms:
+        t = {'roomNo': room.number}
+        lease = Lease.objects.filter(room_id=room).filter(start_time__lte=now).filter(end_time__gte=now).first()
+        if not lease:
+            t['isRented'] = False
+            t['userID'] = None
+            t['userName'] = None
+            t['startTime'] = None
+            t['endTime'] = None
+            t['Company'] = None
+        else:
+            t['isRented'] = True
+            t['userID'] = lease.user_id_id
+            t['userName'] = lease.user_id.name
+            t['startTime'] = datetime.fromtimestamp(lease.start_time).strftime('%Y.%m.%d')
+            t['endTime'] = datetime.fromtimestamp(lease.end_time).strftime('%Y.%m.%d')
+            t['Company'] = lease.user_id.company
+        r.append(t)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
+
