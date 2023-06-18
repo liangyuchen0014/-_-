@@ -147,7 +147,7 @@ def forget_password(request):
     usr = User.objects.filter(email=email).first()
     if not usr:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    r = redis.RedisCacheClient(host='localhost', port=6379, db=0)
+    r = redis.Redis(host='localhost', port=6379, db=0)
     sms_code = r.get(email)
     if rand_code != sms_code:
         return JsonResponse({'errno': 1004, 'msg': "验证码错误"})
@@ -170,7 +170,7 @@ def send_email_code(request):
     # 生成邮箱验证码
     sms_code = '%06d' % random.randint(0, 999999)
 
-    r = redis.RedisCacheClient(host='localhost', port=6379, db=0)
+    r = redis.Redis(host='localhost', port=6379, db=0)
     r.set(email, sms_code, 60 * 5)
     status = send_sms_code(email, sms_code)
     if status != 0:
