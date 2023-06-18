@@ -15,6 +15,8 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from django.core.cache.backends.redis import RedisCache
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
@@ -195,3 +197,39 @@ EMAIL_FROM = '群星闪耀时'  # 收件人看到的发件人
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_USE_TLS = True  # 是否使用TLS安全传输协议
 # EMAIL_USE_SSL = True    #是否使用SSL加密，qq企业邮箱要求使用
+
+CACHES = {
+    # django存缓默认位置,redis 0号库
+    # default: 连接名称
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+'''
+    # django session存 reidis 1 号库（现在基本不需要使⽤）
+    "session": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    # 图形验证码，存redis 2号库
+    "img_code": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+'''
+'''
+# 配置session使⽤redis存储
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# 配置session存储的位置: 使⽤cache中的
+SESSION_CACHE_ALIAS = "session"
+'''
