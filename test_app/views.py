@@ -1,15 +1,18 @@
+import random
 import time
 import datetime
 
 from django.contrib.auth import authenticate, login
+from django.core.cache.backends import redis
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework_jwt.settings import api_settings
+from django.core.cache import cache
 
+from test_app.message import send_sms_code
 from test_app.models import *
 from qunxing_backend.settings import EMAIL_HOST_USER
-from qunxing_backend.settings import MEDIA_ROOT
 
 
 @csrf_exempt
@@ -19,6 +22,7 @@ def register(request):
     username = request.POST.get('username')
     email = request.POST.get('email')
     password = request.POST.get('password')
+    # all() 函数用于判断给定的可迭代参数 iterable 中的所有元素是否都为 TRUE，如果是返回 True，否则返回 False。
     if not all([username, password, email]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
     usr = User.objects.filter(username=username).first()
@@ -37,6 +41,8 @@ def user_login(request):
     if not all([username, password]):
         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     # 验证登录
+    # authenticate() 函数接收两个参数，用户名 username 和 密码 password，然后在数据库中验证。
+    # 如果验证通过，返回一个User。对如果验证不通过，authenticate()返回 None。
     is_login = authenticate(username=username, password=password)
     if is_login is None:
         return JsonResponse({'errno': 1005, 'message': '用户名或密码错误'})
@@ -126,3 +132,47 @@ def get_user_info(request):
     if not usr:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': usr.get_info()})
+
+
+# 忘记密码
+@csrf_exempt
+def forget_password(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    email = request.POST.get('email')
+    rand_code = request.POST.get('rand_code')
+    new_password = request.POST.get('new_password')
+    if not all([email, rand_code, new_password]):
+        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+    usr = User.objects.filter(email=email).first()
+    if not usr:
+        return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    r = redis.RedisCacheClient(host='localhost', port=6379, db=0)
+    sms_code = r.get(email)
+    if rand_code != sms_code:
+        return JsonResponse({'errno': 1004, 'msg': "验证码错误"})
+    usr.set_password(new_password)
+    usr.save()
+    return JsonResponse({'errno': 0, 'msg': "修改成功"})
+
+
+# 发送邮箱验证码
+@csrf_exempt
+def send_email_code(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    email = request.POST.get('email')
+    if not all([email]):
+        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+    usr = User.objects.filter(email=email).first()
+    if not usr:
+        return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    # 生成邮箱验证码
+    sms_code = '%06d' % random.randint(0, 999999)
+
+    r = redis.RedisCacheClient(host='localhost', port=6379, db=0)
+    r.set(email, sms_code, 60 * 5)
+    status = send_sms_code(email, sms_code)
+    if status != 0:
+        return JsonResponse({'errno': 1004, 'msg': "验证码发送失败"})
+    return JsonResponse({'errno': 0, 'msg': "验证码发送成功"})
