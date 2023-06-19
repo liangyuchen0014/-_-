@@ -98,7 +98,8 @@ def change_user_info(request):
     usr.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
 
-#获取用户信息
+
+# 获取用户信息
 @csrf_exempt
 def get_user_info(request):
     if request.method != 'POST':
@@ -156,7 +157,8 @@ def send_email_code(request):
         return JsonResponse({'errno': 1004, 'msg': "验证码发送失败"})
     return JsonResponse({'errno': 0, 'msg': "验证码发送成功"})
 
-#新增客户信息
+
+# 新增客户信息
 @csrf_exempt
 def addNewClient(request):
     if request.method != 'POST':
@@ -165,15 +167,14 @@ def addNewClient(request):
         new_name = request.POST.get('new_name')
         new_phone = request.POST.get('new_phone')
         new_company = request.POST.get('new_company')
-        new_legal =request.POST.get('new_legal')
+        new_legal = request.POST.get('new_legal')
         # 在这里进行新增客户信息的操作
-        usr = User.objects.create_user(username=new_name, phone=new_phone, legal_person=new_legal,company=new_company)
+        usr = User.objects.create_user(username=new_name, phone=new_phone, legal_person=new_legal, company=new_company)
         usr.save()
         return JsonResponse({'status': 'success'})
 
 
-
-#删除客户信息
+# 删除客户信息
 @csrf_exempt
 def deleteClientInfo(request):
     if request.method != 'POST':
@@ -182,6 +183,7 @@ def deleteClientInfo(request):
         id = request.POST.get('id')
         usr = User.objects.filter(user_id=id).delete()
         return JsonResponse({'status': 'success'})
+
 
 # 客户报修
 @csrf_exempt
@@ -351,7 +353,8 @@ def repairComplete(request):
     repair_form.save()
     return JsonResponse({'errno': 0, 'msg': "提交成功"})
 
-#获取某一楼层所有房间状态
+
+# 获取某一楼层所有房间状态
 @csrf_exempt
 def get_room_status(request):
     if request.method != 'POST':
@@ -597,6 +600,7 @@ def get_worker(request):
     workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
     r = []
     for worker in workers:
-        r.append({'name': worker.name, 'tel': worker.phone, 'job': worker.post, 'isMaintainer': worker.type != -1,
+        r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
+                  'isMaintainer': worker.type != -1,
                   'category': worker.type, 'isAvailable': worker.is_available})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
