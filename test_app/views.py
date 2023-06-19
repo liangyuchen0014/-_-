@@ -426,6 +426,7 @@ def get_client_info(request):
                 'end_year': datetime.fromtimestamp(r.end_time).strftime('%Y-%m-%d'),
                 'contract_time': datetime.fromtimestamp(r.contract_time).strftime('%Y-%m-%d')
             }
+
             room_info.append(tmp)
             payments = Payment.objects.filter(lease_id=r.id).all()
             for p in payments:
