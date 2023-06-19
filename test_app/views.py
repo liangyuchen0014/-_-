@@ -233,7 +233,7 @@ def myRepair(request):
             'wid': res['id'],
             'rid': res['room_id'],
             'type': res['type'],
-            'repair_time': res['repair_time'],
+            'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
             'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d %H:%M:%S'),
             'status': res['status'],
             'maintainer_name': res['maintainer_name'],
@@ -332,6 +332,9 @@ def repairComplete(request):
     user = User.objects.filter(user_id=user_id).first()
     if not user:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    user.is_available = 1
+    user.save()
+
     solver_name = user.name
     solver_id = user_id
     wid = request.POST.get('wid')
@@ -481,6 +484,14 @@ def setMaintainer(request):
     maintainer_name = request.POST.get('maintainer_name')
     maintainer_id = request.POST.get('maintainer_id')
     maintainer_phone = request.POST.get('maintainer_phone')
+
+    # 维修工状态设为不空闲
+    maintainer = User.objects.filter(user_id=maintainer_id).first()
+    if not maintainer:
+        return JsonResponse({'errno': 1005, 'msg': "维修工不存在"})
+    maintainer.is_available = 0
+    maintainer.save()
+
     # 将时间字符串转换为时间戳
     dt = datetime.strptime(maintain_time, '%Y-%m-%d %H:%M:%S')
     maintain_time = dt.timestamp()
