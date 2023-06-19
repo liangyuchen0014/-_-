@@ -33,5 +33,5 @@ urlpatterns = [
     path('repairComplete', repairComplete),
     path('setMaintainer', setMaintainer),
     path('repairList', repairList),
-
+    path('changeClientInfo', change_client_info),
 ]

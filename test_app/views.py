@@ -355,9 +355,9 @@ def get_client_info(request):
         for r in rooms:
             tmp = {
                 'id': r.room_id_id,
-                'start_year': r.start_time,
-                'end_year': r.end_time,
-                'contract_time': r.contract_time
+                'start_year': datetime.fromtimestamp(r.start_time).strftime('%Y.%m.%d'),
+                'end_year': datetime.fromtimestamp(r.end_time).strftime('%Y.%m.%d'),
+                'contract_time': datetime.fromtimestamp(r.contract_time).strftime('%Y.%m.%d')
             }
             room_info.append(tmp)
         payment = []  # 需要修改数据库设计
@@ -372,6 +372,25 @@ def get_client_info(request):
         }
         clients.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'clients': clients})
+
+
+# 修改客户信息
+@csrf_exempt
+def change_client_info(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    user_id = request.POST.get('id')
+    new_name = request.POST.get('new_name')
+    new_phone = request.POST.get('new_phone')
+    new_company = request.POST.get('new_company')
+    new_legal = request.POST.get('new_legal')
+    client = User.objects.filter(user_id=user_id).first()
+    client.name = new_name
+    client.phone = new_phone
+    client.company = new_company
+    client.legal_person = new_legal
+    client.save()
+    return JsonResponse({'errno': 0, 'msg': "修改成功"})
 
 
 # 管理员设置维修工
