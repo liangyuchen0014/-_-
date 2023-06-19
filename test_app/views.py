@@ -388,6 +388,10 @@ def get_room_status(request):
 def get_client_info(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    user_id = decode_token(token)
+    if user_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     clients = []
     client = User.objects.filter(type=0).all()
     for c in client:
