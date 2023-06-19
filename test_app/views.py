@@ -302,6 +302,10 @@ def repairComplete(request):
         return JsonResponse({'errno': 1003, 'msg': "报修单不存在"})
     if repair_form.status != 1:
         return JsonResponse({'errno': 1004, 'msg': "报修单状态错误"})
+    repair_form.solver_name = solver_name
+    repair_form.solver_id = solver_id
+    repair_form.solve_time = solve_time
+    repair_form.solution = solution
     repair_form.status = 2
     repair_form.save()
     return JsonResponse({'errno': 0, 'msg': "提交成功"})
@@ -368,3 +372,58 @@ def get_client_info(request):
         }
         clients.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'clients': clients})
+
+
+# 管理员设置维修工
+@csrf_exempt
+def setMaintainer(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    user_id = request.POST.get('user_id')
+    user = User.objects.filter(user_id=user_id).first()
+    if not user:
+        return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    form_id = request.POST.get('form_id')
+    repair_form = RepairForm.objects.filter(id=form_id).first()
+    if not repair_form:
+        return JsonResponse({'errno': 1003, 'msg': "报修单不存在"})
+    if repair_form.status != 0:
+        return JsonResponse({'errno': 1004, 'msg': "报修单状态错误"})
+
+    maintain_time = request.POST.get('maintain_time')
+    maintainer_name = request.POST.get('maintainer_name')
+    maintainer_id = request.POST.get('maintainer_id')
+    maintainer_phone = request.POST.get('maintainer_phone')
+    repair_form.maintain_time = maintain_time
+    repair_form.maintainer_name = maintainer_name
+    repair_form.maintainer_id = maintainer_id
+    repair_form.maintainer_phone = maintainer_phone
+    repair_form.feedback_time = datetime.datetime.now()
+    repair_form.status = 1
+    repair_form.save()
+    return JsonResponse({'errno': 0, 'msg': "设置成功"})
+
+
+# 管理员查看维修单列表
+@csrf_exempt
+def repairList(request):
+    if request.method != 'GET':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    user_id = decode_token(token)
+    if user_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    repair_form = RepairForm.objects.all()
+    data = []
+    for form in repair_form:
+        res = form.get_info()
+        ret = {
+            'form_id': res['id'],
+            'user_id': res['company_id'],
+            'room_number': res['room_number'],
+            'room_id': res['room_id'],
+            'status': res['status'],
+            'repair_time': res['repair_time']
+        }
+        data.append(ret)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
