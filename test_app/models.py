@@ -54,16 +54,14 @@ class Wiki(models.Model):
 
 
 class Room(models.Model):
-    id = models.AutoField(primary_key=True)
-    number = models.CharField(max_length=255, null=True)  # 房间号（四位，如1001）
+    id = models.IntegerField(primary_key=True)  # 房间号（如1001, 101）
     level = models.CharField(max_length=255, null=True)
 
 
 class Lease(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 客户id(外键)
-    room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间id(外键)
-    room_number = models.CharField(max_length=255, null=True)  # 房间号（四位，如1001）
+    room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间号(外键)
     start_time = models.BigIntegerField(null=True)  # 起租时间
     end_time = models.BigIntegerField(null=True)  # 终止时间
     contract_time = models.BigIntegerField(null=True)  # 签约时间
@@ -74,7 +72,6 @@ class RepairForm(models.Model):
     description = models.TextField(blank=True, null=True)  # 问题描述
     type = models.IntegerField(default=0)  # 问题类型 1:水  2:电  3:机械  4:其他
     repair_time = models.BigIntegerField(null=True)  # 报修时间
-    room_number = models.CharField(max_length=255, null=True)  # 房间号
     room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间id(外键)
     company_name = models.CharField(max_length=255, null=True)  # 报修公司名称
     company_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 报修公司id(外键)
@@ -97,7 +94,6 @@ class RepairForm(models.Model):
             'description': self.description,
             'type': self.type,
             'repair_time': self.repair_time,
-            'room_number': self.room_number,
             'room_id': self.room_id,
             'company_name': self.company_name,
             'company_id': self.company_id,

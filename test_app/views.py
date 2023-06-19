@@ -318,7 +318,7 @@ def get_room_status(request):
     rooms = Room.objects.filter(level=level).all()
     r = []
     for room in rooms:
-        t = {'roomNo': room.number}
+        t = {'roomNo': room.id}
         lease = Lease.objects.filter(room_id=room).filter(start_time__lte=now).filter(end_time__gte=now).first()
         if not lease:
             t['isRented'] = False
@@ -350,7 +350,7 @@ def get_client_info(request):
         room_info = []
         for r in rooms:
             tmp = {
-                'id': r.room_number,
+                'id': r.room_id_id,
                 'start_year': r.start_time,
                 'end_year': r.end_time,
                 'contract_time': r.contract_time
