@@ -606,5 +606,5 @@ def get_worker(request):
     for worker in workers:
         r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
                   'isMaintainer': worker.type != -1,
-                  'category': worker.type, 'isAvailable': worker.is_available})
+                  'category': str(worker.type), 'isAvailable': worker.is_available})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
