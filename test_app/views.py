@@ -16,16 +16,15 @@ from test_app.models import *
 def register(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    username = request.POST.get('username')
     email = request.POST.get('email')
     password = request.POST.get('password')
     # all() 函数用于判断给定的可迭代参数 iterable 中的所有元素是否都为 TRUE，如果是返回 True，否则返回 False。
-    if not all([username, password, email]):
+    if not all([password, email]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
-    usr = User.objects.filter(username=username).first()
+    usr = User.objects.filter(email=email).first()
     if usr:
-        return JsonResponse({'errno': 1003, 'msg': "该用户名已注册"})
-    new_user = User.objects.create_user(username=username, password=password, email=email)
+        return JsonResponse({'errno': 1003, 'msg': "该邮箱已注册"})
+    new_user = User.objects.create_user(password=password, email=email)
     return JsonResponse({'errno': 0, 'msg': "注册成功", 'data': new_user.get_info()})
 
 
@@ -33,16 +32,16 @@ def register(request):
 def user_login(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    username = request.POST.get('username')
+    email = request.POST.get('username')
     password = request.POST.get('password')
-    if not all([username, password]):
+    if not all([email, password]):
         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     # 验证登录
-    # authenticate() 函数接收两个参数，用户名 username 和 密码 password，然后在数据库中验证。
+    # authenticate() 函数接收两个参数，邮箱 email 和 密码 password，然后在数据库中验证。
     # 如果验证通过，返回一个User。对如果验证不通过，authenticate()返回 None。
-    is_login = authenticate(username=username, password=password)
+    is_login = authenticate(email=email, password=password)
     if is_login is None:
-        return JsonResponse({'errno': 1005, 'message': '用户名或密码错误'})
+        return JsonResponse({'errno': 1005, 'message': '邮箱或密码错误'})
     login(request, is_login)
     # 生成token
     jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -53,7 +52,7 @@ def user_login(request):
     jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
     r = jwt_decode_handler(token)
     return JsonResponse(
-        {'errno': 0, 'msg': "登录成功", 'data': {'user_id': r['user_id'], 'username': r['username'], 'token': token}})
+        {'errno': 0, 'msg': "登录成功", 'data': {'user_id': r['user_id'], 'token': token}})
 
 
 def decode_token(token):
