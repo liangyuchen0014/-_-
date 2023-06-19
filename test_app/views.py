@@ -157,8 +157,7 @@ def send_email_code(request):
         return JsonResponse({'errno': 1004, 'msg': "验证码发送失败"})
     return JsonResponse({'errno': 0, 'msg': "验证码发送成功"})
 
-
-# 新增客户信息
+#新增客户信息
 @csrf_exempt
 def addNewClient(request):
     if request.method != 'POST':
@@ -167,14 +166,14 @@ def addNewClient(request):
         new_name = request.POST.get('new_name')
         new_phone = request.POST.get('new_phone')
         new_company = request.POST.get('new_company')
-        new_legal = request.POST.get('new_legal')
+        new_legal =request.POST.get('new_legal')
         # 在这里进行新增客户信息的操作
-        usr = User.objects.create_user(username=new_name, phone=new_phone, legal_person=new_legal, company=new_company)
+        usr = User.objects.create_user(username=new_name, phone=new_phone, legal_person=new_legal,company=new_company)
         usr.save()
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({'errno': 0, 'msg': "客户信息添加成功"})
 
 
-# 删除客户信息
+#删除客户信息
 @csrf_exempt
 def deleteClientInfo(request):
     if request.method != 'POST':
@@ -182,7 +181,7 @@ def deleteClientInfo(request):
     else:
         id = request.POST.get('id')
         usr = User.objects.filter(user_id=id).delete()
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({'errno': 0, 'msg': "客户信息已删除"})
 
 
 # 客户报修
