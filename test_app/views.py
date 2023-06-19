@@ -352,6 +352,7 @@ def get_client_info(request):
     for c in client:
         rooms = Lease.objects.filter(user_id=c.user_id)
         room_info = []
+        payment = []  # 需要修改数据库设计
         for r in rooms:
             tmp = {
                 'id': r.room_id_id,
@@ -360,7 +361,19 @@ def get_client_info(request):
                 'contract_time': datetime.fromtimestamp(r.contract_time).strftime('%Y.%m.%d')
             }
             room_info.append(tmp)
-        payment = []  # 需要修改数据库设计
+            payments = Payment.objects.filter(lease_id=r.id).all()
+            for p in payments:
+                if not p.time:
+                    is_paid = False
+                else:
+                    is_paid = True
+                tmp = {
+                    'year': p.year,
+                    'ispaid': is_paid,
+                    'pay_time': p.time
+                }
+                payment.append(tmp)
+
         ret = {
             'legal_person': c.legal_person,
             'company': c.company,
