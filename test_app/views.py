@@ -170,13 +170,12 @@ def addNewClient(request):
     new_email = request.POST.get('new_email')
     if not all([new_name, new_phone, new_company, new_legal, new_email]):
         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
-    usr = User.objects.filter(email=new_email).first()
+    usr = User.objects.filter(username=new_email).first()
     if usr:
         return JsonResponse({'errno': 1002, 'msg': "用户已存在"})
     # 在这里进行新增客户信息的操作
-    usr = User.objects.create_user(username=new_email, phone=new_phone, legal_person=new_legal, company=new_company,
-                                   email=new_email, name=new_name)
-    usr.save()
+    User.objects.create_user(username=new_email, phone=new_phone, legal_person=new_legal, company=new_company,
+                             email=new_email, name=new_name, password=new_email)
     return JsonResponse({'errno': 0, 'msg': "客户信息添加成功"})
 
 
