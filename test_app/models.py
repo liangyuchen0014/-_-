@@ -33,8 +33,9 @@ class User(AbstractUser):
 
 class Payment(models.Model):
     id = models.AutoField(primary_key=True)
+    year = models.IntegerField(null=True)   # 按年份给出物业费缴纳信息
     lease_id = models.ForeignKey('Lease', on_delete=models.DO_NOTHING, null=True)  # 租赁信息id
-    time = models.BigIntegerField(null=True)
+    time = models.BigIntegerField(null=True)    # 若时间为空则为未缴纳，不为空则已缴纳
 
 
 class Visitor(models.Model):
