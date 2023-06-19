@@ -170,7 +170,7 @@ def addNewClient(request):
         new_legal = request.POST.get('new_legal')
         new_email = request.POST.get('new_email')
         # 在这里进行新增客户信息的操作
-        usr = User.objects.create_user(username=new_name, phone=new_phone, legal_person=new_legal, company=new_company, email=new_email)
+        usr = User.objects.create_user(name=new_name, phone=new_phone, legal_person=new_legal, company=new_company, email=new_email)
         usr.save()
         return JsonResponse({'errno': 0, 'msg': "客户信息添加成功"})
 
