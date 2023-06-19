@@ -20,8 +20,8 @@ def main():
 
 # manage.py 文件中的 main 方法
 if __name__ == "__main__":
-    from django.core.management.commands.runserver import Command as Runserver
-    Runserver.default_addr = '10.251.252.218'  # 修改默认地址
-    Runserver.default_port = '8000'  # 修改默认端口
+    #from django.core.management.commands.runserver import Command as Runserver
+    #Runserver.default_addr = '0.0.0.0'  # 修改默认地址
+    #Runserver.default_port = '8000'  # 修改默认端口
     main()
 
