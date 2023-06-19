@@ -172,6 +172,7 @@ def addNewClient(request):
         usr.save()
         return JsonResponse({'errno': 0, 'msg': "客户信息添加成功"})
 
+
 #删除客户信息
 @csrf_exempt
 def deleteClientInfo(request):
