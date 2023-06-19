@@ -34,4 +34,6 @@ urlpatterns = [
     path('setMaintainer', setMaintainer),
     path('repairList', repairList),
     path('changeClientInfo', change_client_info),
+    path('saveLeaseInfo', save_lease),
+    path('deleteLeaseInfo', del_lease),
 ]

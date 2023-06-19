@@ -21,7 +21,7 @@ def register(request):
     # all() 函数用于判断给定的可迭代参数 iterable 中的所有元素是否都为 TRUE，如果是返回 True，否则返回 False。
     if not all([password, email]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
-    usr = User.objects.filter(email=email).first()
+    usr = User.objects.filter(username=email).first()
     if usr:
         return JsonResponse({'errno': 1003, 'msg': "该邮箱已注册"})
     new_user = User.objects.create_user(username=email, password=password, email=email)
@@ -480,3 +480,68 @@ def repairList(request):
         }
         data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+@csrf_exempt
+def save_lease(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    user_id = request.POST.get('id')
+    room_id = request.POST.get('room_id')
+    start_time = request.POST.get('start_time')
+    end_time = request.POST.get('end_time')
+    sign_time = request.POST.get('sign_time')
+    if not all([token, user_id, room_id, start_time, end_time]):
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+    usr = User.objects.filter(user_id=user_id).first()
+    if not usr:
+        return JsonResponse({'errno': 1004, 'msg': "用户不存在"})
+    room = Room.objects.filter(id=room_id).first()
+    if not room:
+        return JsonResponse({'errno': 1003, 'msg': "房间不存在"})
+    lease = Lease.objects.filter(room_id=room).first()
+    if lease:
+        lease.start_time = start_time
+        lease.end_time = end_time
+        lease.contract_time = sign_time
+        lease.user_id = usr
+        lease.save()
+    else:
+        Lease.objects.create(start_time=start_time, end_time=end_time, contract_time=sign_time, room_id=room,
+                             user_id=usr)
+    return JsonResponse({'errno': 0, 'msg': "保存成功"})
+
+
+@csrf_exempt
+def del_lease(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    room_id = request.POST.get('room_id')
+    if not all([token, room_id]):
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+    room = Room.objects.filter(id=room_id).first()
+    if not room:
+        return JsonResponse({'errno': 1003, 'msg': "房间不存在"})
+    lease = Lease.objects.filter(room_id=room).first()
+    if not lease:
+        return JsonResponse({'errno': 1006, 'msg': "合同不存在"})
+    lease.delete()
+    return JsonResponse({'errno': 0, 'msg': "删除成功"})
