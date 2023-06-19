@@ -170,7 +170,8 @@ def addNewClient(request):
         new_legal = request.POST.get('new_legal')
         new_email = request.POST.get('new_email')
         # 在这里进行新增客户信息的操作
-        usr = User.objects.create_user(name=new_name, phone=new_phone, legal_person=new_legal, company=new_company, email=new_email)
+        usr = User.objects.create_user(username=new_email, phone=new_phone, legal_person=new_legal, company=new_company,
+                                       email=new_email,name=new_name)
         usr.save()
         return JsonResponse({'errno': 0, 'msg': "客户信息添加成功"})
 
@@ -214,9 +215,9 @@ def repairReport(request):
     for form in repair_form:
         if form.status == 0 or form.status == 1:
             return JsonResponse({'errno': 1004, 'msg': "该房间已报修"})
-    new_repair_form = RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name,
-                                                contact_phone=phone, room_id=room,
-                                                type=r_type, description=description, repair_time=repair_time)
+    RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name,
+                              contact_phone=phone, room_id=room,
+                              type=r_type, description=description, repair_time=repair_time)
     return JsonResponse({'errno': 0, 'msg': "报修成功"})
 
 
@@ -570,7 +571,7 @@ def save_lease(request):
         lease.save()
     else:
         Lease.objects.create(start_time=start_time, end_time=end_time, contract_time=sign_time, room_id=room,
-                             user_id=usr)
+                             user_id=usr, )
     return JsonResponse({'errno': 0, 'msg': "保存成功"})
 
 
@@ -624,3 +625,25 @@ def get_worker(request):
                   'isMaintainer': worker.type != -1,
                   'category': str(worker.type), 'isAvailable': worker.is_available})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
+
+
+# 客户获取自己租赁的房间的信息
+@csrf_exempt
+def get_lease_room(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    user_id = decode_token(token)
+    if user_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    user = User.objects.filter(user_id=user_id).first()
+    room_list = Lease.objects.filter(user_id=user).all()
+    data = []
+    for room in room_list:
+        res = room.get_info()
+        if res['start_time'] < time.time() < res['end_time']:
+            ret = {
+                'room_id': res['room_id']
+            }
+            data.append(ret)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
