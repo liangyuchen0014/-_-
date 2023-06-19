@@ -157,7 +157,8 @@ def send_email_code(request):
         return JsonResponse({'errno': 1004, 'msg': "验证码发送失败"})
     return JsonResponse({'errno': 0, 'msg': "验证码发送成功"})
 
-#新增客户信息
+
+# 新增客户信息
 @csrf_exempt
 def addNewClient(request):
     if request.method != 'POST':
@@ -166,14 +167,16 @@ def addNewClient(request):
         new_name = request.POST.get('new_name')
         new_phone = request.POST.get('new_phone')
         new_company = request.POST.get('new_company')
-        new_legal =request.POST.get('new_legal')
+        new_legal = request.POST.get('new_legal')
+        new_email = request.POST.get('new_email')
         # 在这里进行新增客户信息的操作
-        usr = User.objects.create_user(username=new_name, phone=new_phone, legal_person=new_legal,company=new_company)
+        usr = User.objects.create_user(username=new_email, phone=new_phone, legal_person=new_legal, company=new_company,
+                                       email=new_email,name=new_name)
         usr.save()
         return JsonResponse({'errno': 0, 'msg': "客户信息添加成功"})
 
 
-#删除客户信息
+# 删除客户信息
 @csrf_exempt
 def deleteClientInfo(request):
     if request.method != 'POST':
@@ -181,7 +184,10 @@ def deleteClientInfo(request):
     else:
         id = request.POST.get('id')
         usr = User.objects.filter(user_id=id).delete()
+    if usr:
         return JsonResponse({'errno': 0, 'msg': "客户信息已删除"})
+    else:
+        return JsonResponse({'errno': 1, 'msg': "客户信息不存在"})
 
 
 # 客户报修
@@ -209,9 +215,9 @@ def repairReport(request):
     for form in repair_form:
         if form.status == 0 or form.status == 1:
             return JsonResponse({'errno': 1004, 'msg': "该房间已报修"})
-    new_repair_form = RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name,
-                                                contact_phone=phone, room_id=room,
-                                                type=r_type, description=description, repair_time=repair_time)
+    RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name,
+                              contact_phone=phone, room_id=room,
+                              type=r_type, description=description, repair_time=repair_time)
     return JsonResponse({'errno': 0, 'msg': "报修成功"})
 
 
@@ -224,17 +230,22 @@ def myRepair(request):
     user_id = decode_token(token)
     if user_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+
     user = User.objects.filter(user_id=user_id).first()
     repair_form = RepairForm.objects.filter(company_id=user)
     data = []
     for form in repair_form:
         res = form.get_info()
+        if res['status'] == 0:
+            maintain_time = None
+        else:
+            maintain_time = datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d %H:%M:%S')
         ret = {
             'wid': res['id'],
             'rid': res['room_id'],
             'type': res['type'],
-            'repair_time': res['repair_time'],
-            'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d %H:%M:%S'),
+            'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
+            'maintain_time': maintain_time,
             'status': res['status'],
             'maintainer_name': res['maintainer_name'],
             'maintainer_phone': res['maintainer_phone'],
@@ -332,6 +343,9 @@ def repairComplete(request):
     user = User.objects.filter(user_id=user_id).first()
     if not user:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    user.is_available = 1
+    user.save()
+
     solver_name = user.name
     solver_id = user_id
     wid = request.POST.get('wid')
@@ -481,6 +495,14 @@ def setMaintainer(request):
     maintainer_name = request.POST.get('maintainer_name')
     maintainer_id = request.POST.get('maintainer_id')
     maintainer_phone = request.POST.get('maintainer_phone')
+
+    # 维修工状态设为不空闲
+    maintainer = User.objects.filter(user_id=maintainer_id).first()
+    if not maintainer:
+        return JsonResponse({'errno': 1005, 'msg': "维修工不存在"})
+    maintainer.is_available = 0
+    maintainer.save()
+
     # 将时间字符串转换为时间戳
     dt = datetime.strptime(maintain_time, '%Y-%m-%d %H:%M:%S')
     maintain_time = dt.timestamp()
@@ -554,7 +576,7 @@ def save_lease(request):
         lease.save()
     else:
         Lease.objects.create(start_time=start_time, end_time=end_time, contract_time=sign_time, room_id=room,
-                             user_id=usr)
+                             user_id=usr, )
     return JsonResponse({'errno': 0, 'msg': "保存成功"})
 
 
@@ -606,5 +628,27 @@ def get_worker(request):
     for worker in workers:
         r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
                   'isMaintainer': worker.type != -1,
-                  'category': worker.type, 'isAvailable': worker.is_available})
+                  'category': str(worker.type), 'isAvailable': worker.is_available})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
+
+
+# 客户获取自己租赁的房间的信息
+@csrf_exempt
+def get_lease_room(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    user_id = decode_token(token)
+    if user_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    user = User.objects.filter(user_id=user_id).first()
+    room_list = Lease.objects.filter(user_id=user).all()
+    data = []
+    for room in room_list:
+        res = room.get_info()
+        if res['start_time'] < time.time() < res['end_time']:
+            ret = {
+                'room_id': res['room_id']
+            }
+            data.append(ret)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})

@@ -67,6 +67,15 @@ class Lease(models.Model):
     end_time = models.BigIntegerField(null=True)  # 终止时间
     contract_time = models.BigIntegerField(null=True)  # 签约时间
 
+    def get_info(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id.user_id,
+            'room_id': self.room_id.id,
+            'start_time': self.start_time,
+            'end_time': self.end_time,
+            'contract_time': self.contract_time
+        }
 
 class RepairForm(models.Model):
     id = models.AutoField(primary_key=True)
