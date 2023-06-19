@@ -545,3 +545,28 @@ def del_lease(request):
         return JsonResponse({'errno': 1006, 'msg': "合同不存在"})
     lease.delete()
     return JsonResponse({'errno': 0, 'msg': "删除成功"})
+
+
+@csrf_exempt
+def get_worker(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    page = int(request.POST.get('page'))
+    num = int(request.POST.get('numInOnePage'))
+    if not all([token, page, num]):
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+    workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
+    r = []
+    for worker in workers:
+        r.append({'name': worker.name, 'tel': worker.phone, 'job': worker.post, 'isMaintainer': worker.type != -1,
+                  'category': worker.type, 'isAvailable': worker.is_available})
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
