@@ -99,6 +99,7 @@ def change_user_info(request):
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
 
 
+# 获取用户信息
 @csrf_exempt
 def get_user_info(request):
     if request.method != 'POST':
@@ -180,6 +181,33 @@ def deleteClientInfo(request):
         id = request.POST.get('id')
         usr = User.objects.filter(user_id=id).delete()
         return JsonResponse({'errno': 0, 'msg': "客户信息已删除"})
+
+# 新增客户信息
+@csrf_exempt
+def addNewClient(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    else:
+        new_name = request.POST.get('new_name')
+        new_phone = request.POST.get('new_phone')
+        new_company = request.POST.get('new_company')
+        new_legal = request.POST.get('new_legal')
+        # 在这里进行新增客户信息的操作
+        usr = User.objects.create_user(username=new_name, phone=new_phone, legal_person=new_legal, company=new_company)
+        usr.save()
+        return JsonResponse({'status': 'success'})
+
+
+# 删除客户信息
+@csrf_exempt
+def deleteClientInfo(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    else:
+        id = request.POST.get('id')
+        usr = User.objects.filter(user_id=id).delete()
+        return JsonResponse({'status': 'success'})
+
 
 # 客户报修
 @csrf_exempt
@@ -350,6 +378,7 @@ def repairComplete(request):
     return JsonResponse({'errno': 0, 'msg': "提交成功"})
 
 
+# 获取某一楼层所有房间状态
 @csrf_exempt
 def get_room_status(request):
     if request.method != 'POST':
@@ -386,6 +415,15 @@ def get_room_status(request):
 def get_client_info(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    user_id = decode_token(token)
+    if user_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=user_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
     clients = []
     client = User.objects.filter(type=0).all()
     for c in client:
@@ -591,6 +629,7 @@ def get_worker(request):
     workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
     r = []
     for worker in workers:
-        r.append({'name': worker.name, 'tel': worker.phone, 'job': worker.post, 'isMaintainer': worker.type != -1,
+        r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
+                  'isMaintainer': worker.type != -1,
                   'category': worker.type, 'isAvailable': worker.is_available})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
