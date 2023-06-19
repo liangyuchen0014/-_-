@@ -395,6 +395,11 @@ def get_client_info(request):
     user_id = decode_token(token)
     if user_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=user_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
     clients = []
     client = User.objects.filter(type=0).all()
     for c in client:
