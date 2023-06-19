@@ -70,8 +70,8 @@ class Lease(models.Model):
     def get_info(self):
         return {
             'id': self.id,
-            'user_id': self.user_id,
-            'room_id': self.room_id,
+            'user_id': self.user_id.user_id,
+            'room_id': self.room_id.id,
             'start_time': self.start_time,
             'end_time': self.end_time,
             'contract_time': self.contract_time

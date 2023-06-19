@@ -230,17 +230,22 @@ def myRepair(request):
     user_id = decode_token(token)
     if user_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+
     user = User.objects.filter(user_id=user_id).first()
     repair_form = RepairForm.objects.filter(company_id=user)
     data = []
     for form in repair_form:
         res = form.get_info()
+        if res['status'] == 0:
+            maintain_time = None
+        else:
+            maintain_time = datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d %H:%M:%S')
         ret = {
             'wid': res['id'],
             'rid': res['room_id'],
             'type': res['type'],
             'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
-            'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d %H:%M:%S'),
+            'maintain_time': maintain_time,
             'status': res['status'],
             'maintainer_name': res['maintainer_name'],
             'maintainer_phone': res['maintainer_phone'],
@@ -417,10 +422,11 @@ def get_client_info(request):
         for r in rooms:
             tmp = {
                 'id': r.room_id_id,
-                'start_year': datetime.fromtimestamp(r.start_time).strftime('%Y.%m.%d'),
-                'end_year': datetime.fromtimestamp(r.end_time).strftime('%Y.%m.%d'),
-                'contract_time': datetime.fromtimestamp(r.contract_time).strftime('%Y.%m.%d')
+                'start_year': datetime.fromtimestamp(r.start_time).strftime('%Y-%m-%d'),
+                'end_year': datetime.fromtimestamp(r.end_time).strftime('%Y-%m-%d'),
+                'contract_time': datetime.fromtimestamp(r.contract_time).strftime('%Y-%m-%d')
             }
+
             room_info.append(tmp)
             payments = Payment.objects.filter(lease_id=r.id).all()
             for p in payments:
