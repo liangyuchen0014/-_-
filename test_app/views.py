@@ -334,3 +334,35 @@ def get_room_status(request):
             t['Company'] = lease.user_id.company
         r.append(t)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
+
+
+# 获取客户信息
+@csrf_exempt
+def get_client_info(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    clients = []
+    client = User.objects.filter(type=0).all()
+    for c in client:
+        rooms = Lease.objects.filter(user_id=c.user_id)
+        room_info = []
+        for r in rooms:
+            tmp = {
+                'id': r.room_number,
+                'start_year': r.start_time,
+                'end_year': r.end_time,
+                'contract_time': r.contract_time
+            }
+            room_info.append(tmp)
+        payment = []  # 需要修改数据库设计
+        ret = {
+            'legal_person': c.legal_person,
+            'company': c.company,
+            'name': c.name,
+            'phone': c.phone,
+            'room': room_info,
+            'payment': payment,
+            'id': c.user_id
+        }
+        clients.append(ret)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'clients': clients})

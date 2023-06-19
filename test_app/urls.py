@@ -25,4 +25,6 @@ urlpatterns = [
     path('forget_password', forget_password),
     path('send_email_code', send_email_code),
     path('getRoomStatus', get_room_status),
+    path('get_client_info', get_client_info),
+
 ]
