@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-from django.core.cache.backends.redis import RedisCache
+# from django.core.cache.backends.redis import RedisCache
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

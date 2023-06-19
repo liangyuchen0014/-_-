@@ -11,7 +11,7 @@ class User(AbstractUser):
     description = models.TextField(blank=True, null=True)
     post = models.CharField(max_length=255, null=True)  # 岗位
     type = models.IntegerField(default=0)  # 0:客户  1:水  2:电  3:机械  -1:管理人员
-    is_available = models.IntegerField(default=0)  # 0:不空闲  1:空闲
+    is_available = models.IntegerField(default=1)  # 0:不空闲  1:空闲
     head_url = models.TextField(blank=True, null=True)
 
     def get_info(self):
@@ -33,8 +33,9 @@ class User(AbstractUser):
 
 class Payment(models.Model):
     id = models.AutoField(primary_key=True)
+    year = models.IntegerField(null=True)   # 按年份给出物业费缴纳信息
     lease_id = models.ForeignKey('Lease', on_delete=models.DO_NOTHING, null=True)  # 租赁信息id
-    time = models.BigIntegerField(null=True)
+    time = models.BigIntegerField(null=True)    # 若时间为空则为未缴纳，不为空则已缴纳
 
 
 class Visitor(models.Model):
@@ -54,16 +55,14 @@ class Wiki(models.Model):
 
 
 class Room(models.Model):
-    id = models.AutoField(primary_key=True)
-    number = models.CharField(max_length=255, null=True)  # 房间号（四位，如1001）
+    id = models.IntegerField(primary_key=True)  # 房间号（如1001, 101）
     level = models.CharField(max_length=255, null=True)
 
 
 class Lease(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 客户id(外键)
-    room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间id(外键)
-    room_number = models.CharField(max_length=255, null=True)  # 房间号（四位，如1001）
+    room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间号(外键)
     start_time = models.BigIntegerField(null=True)  # 起租时间
     end_time = models.BigIntegerField(null=True)  # 终止时间
     contract_time = models.BigIntegerField(null=True)  # 签约时间
@@ -74,7 +73,6 @@ class RepairForm(models.Model):
     description = models.TextField(blank=True, null=True)  # 问题描述
     type = models.IntegerField(default=0)  # 问题类型 1:水  2:电  3:机械  4:其他
     repair_time = models.BigIntegerField(null=True)  # 报修时间
-    room_number = models.CharField(max_length=255, null=True)  # 房间号
     room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间id(外键)
     company_name = models.CharField(max_length=255, null=True)  # 报修公司名称
     company_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 报修公司id(外键)
@@ -97,10 +95,9 @@ class RepairForm(models.Model):
             'description': self.description,
             'type': self.type,
             'repair_time': self.repair_time,
-            'room_number': self.room_number,
-            'room_id': self.room_id,
+            'room_id': self.room_id.id,
             'company_name': self.company_name,
-            'company_id': self.company_id,
+            'company_id': self.company_id.user_id,
             'contact_name': self.contact_name,
             'contact_phone': self.contact_phone,
             'maintain_time': self.maintain_time,
