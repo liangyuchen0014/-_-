@@ -182,32 +182,6 @@ def deleteClientInfo(request):
         usr = User.objects.filter(user_id=id).delete()
         return JsonResponse({'errno': 0, 'msg': "客户信息已删除"})
 
-# 新增客户信息
-@csrf_exempt
-def addNewClient(request):
-    if request.method != 'POST':
-        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    else:
-        new_name = request.POST.get('new_name')
-        new_phone = request.POST.get('new_phone')
-        new_company = request.POST.get('new_company')
-        new_legal = request.POST.get('new_legal')
-        # 在这里进行新增客户信息的操作
-        usr = User.objects.create_user(username=new_name, phone=new_phone, legal_person=new_legal, company=new_company)
-        usr.save()
-        return JsonResponse({'status': 'success'})
-
-
-# 删除客户信息
-@csrf_exempt
-def deleteClientInfo(request):
-    if request.method != 'POST':
-        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    else:
-        id = request.POST.get('id')
-        usr = User.objects.filter(user_id=id).delete()
-        return JsonResponse({'status': 'success'})
-
 
 # 客户报修
 @csrf_exempt
