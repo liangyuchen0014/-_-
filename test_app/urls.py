@@ -37,4 +37,7 @@ urlpatterns = [
     path('saveLeaseInfo', save_lease),
     path('deleteLeaseInfo', del_lease),
     path('getWorker', get_worker),
+    path('addNewClient', addNewClient),
+    path('deleteClientInfo', deleteClientInfo),
+    path('getLeaseRoom', get_lease_room),
 ]
