@@ -422,9 +422,9 @@ def get_client_info(request):
         for r in rooms:
             tmp = {
                 'id': r.room_id_id,
-                'start_year': datetime.fromtimestamp(r.start_time).strftime('%Y-%m-%d'),
-                'end_year': datetime.fromtimestamp(r.end_time).strftime('%Y-%m-%d'),
-                'contract_time': datetime.fromtimestamp(r.contract_time).strftime('%Y-%m-%d')
+                'start_time': datetime.fromtimestamp(r.start_time).strftime('%Y-%m-%d'),
+                'end_time': datetime.fromtimestamp(r.end_time).strftime('%Y-%m-%d'),
+                'sign_time': datetime.fromtimestamp(r.contract_time).strftime('%Y-%m-%d')
             }
 
             room_info.append(tmp)
