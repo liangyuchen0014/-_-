@@ -163,17 +163,20 @@ def send_email_code(request):
 def addNewClient(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    else:
-        new_name = request.POST.get('new_name')
-        new_phone = request.POST.get('new_phone')
-        new_company = request.POST.get('new_company')
-        new_legal = request.POST.get('new_legal')
-        new_email = request.POST.get('new_email')
-        # 在这里进行新增客户信息的操作
-        usr = User.objects.create_user(username=new_email, phone=new_phone, legal_person=new_legal, company=new_company,
-                                       email=new_email,name=new_name)
-        usr.save()
-        return JsonResponse({'errno': 0, 'msg': "客户信息添加成功"})
+    new_name = request.POST.get('new_name')
+    new_phone = request.POST.get('new_phone')
+    new_company = request.POST.get('new_company')
+    new_legal = request.POST.get('new_legal')
+    new_email = request.POST.get('new_email')
+    if not all([new_name, new_phone, new_company, new_legal, new_email]):
+        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+    usr = User.objects.filter(username=new_email).first()
+    if usr:
+        return JsonResponse({'errno': 1002, 'msg': "用户已存在"})
+    # 在这里进行新增客户信息的操作
+    User.objects.create_user(username=new_email, phone=new_phone, legal_person=new_legal, company=new_company,
+                             email=new_email, name=new_name, password=new_email)
+    return JsonResponse({'errno': 0, 'msg': "客户信息添加成功"})
 
 
 # 删除客户信息
