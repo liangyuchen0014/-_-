@@ -275,6 +275,7 @@ def repairService(request):
         ret = {
             'wid': res['id'],
             'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
+            'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d %H:%M:%S'),
             'status': res['status']
         }
         data.append(ret)
