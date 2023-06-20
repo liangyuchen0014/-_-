@@ -497,7 +497,7 @@ def setMaintainer(request):
 
     maintain_time = request.POST.get('maintain_time')
     maintainer_name = request.POST.get('maintainer_name')
-    maintainer_id = request.POST.get('maintainer_id')
+    maintainer_id = int(request.POST.get('maintainer_id'))
     maintainer_phone = request.POST.get('maintainer_phone')
 
     # 维修工状态设为不空闲
