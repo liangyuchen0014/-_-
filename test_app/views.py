@@ -488,7 +488,7 @@ def setMaintainer(request):
     user = User.objects.filter(user_id=user_id).first()
     if not user:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    form_id = request.POST.get('form_id')
+    form_id = int(request.POST.get('form_id'))
     repair_form = RepairForm.objects.filter(id=form_id).first()
     if not repair_form:
         return JsonResponse({'errno': 1003, 'msg': "报修单不存在"})
