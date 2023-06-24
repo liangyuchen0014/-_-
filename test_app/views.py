@@ -223,7 +223,7 @@ def repairReport(request):
             return JsonResponse({'errno': 1004, 'msg': "该房间已报修"})
     maintain_time = time.mktime(time.strptime(maintain_time, "%Y-%m-%d"))
     RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name, period=period,
-                              maintain_time=maintain_time,contact_phone=phone, room_id=room,
+                              maintain_time=maintain_time, contact_phone=phone, room_id=room,
                               type=r_type, description=description, repair_time=repair_time)
     return JsonResponse({'errno': 0, 'msg': "报修成功"})
 
@@ -665,4 +665,15 @@ def get_lease_room(request):
                 'room_id': res['room_id']
             }
             data.append(ret)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+@csrf_exempt
+def get_solution(request):
+    if request.method not in ['POST', 'GET']:
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    issues = Wiki.objects.all()
+    data = []
+    for issue in issues:
+        data.append({'problem': issue.description, 'solution': issue.solution})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
