@@ -215,7 +215,7 @@ def repairReport(request):
     repair_time = time.time()
 
     period = int(request.POST.get('period'))
-    maintain_day = request.POST.get('maintain_day')
+    maintain_day = request.POST.get('maintain_time')
     # 时间拼接
     start_time = ['08:00', '10:00', '14:00', '16:00']
     end_time = ['10:00', '12:00', '16:00', '18:00']
