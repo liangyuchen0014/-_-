@@ -653,7 +653,7 @@ def get_worker(request):
     r = []
     for worker in workers:
         r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
-                  'isMaintainer': worker.type != -1,
+                  'isMaintainer': worker.type != -1,  # TODO
                   'category': str(worker.type), 'isAvailable': worker.is_available})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
 
@@ -923,3 +923,43 @@ def visit_apply(request):
     Visitor.objects.create(name=name, number=number, visit_time=visit_time, phone=phone, apply_time=time.time(),
                            user_id=user)
     return JsonResponse({'errno': 0, 'msg': "申请成功"})
+
+
+@csrf_exempt
+def deliver(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    type = int(request.POST.get('type'))
+    period = int(request.POST.get('period'))
+    maintain_time = request.POST.get('maintain_time')
+    if not all([token, type, period, maintain_time]):
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+    if type not in [1, 2, 3, 4]:
+        return JsonResponse({'errno': 1003, 'msg': "时间段错误"})
+    time_array = time.strptime(maintain_time, '%Y-%m-%d')
+    start_time = int(time.mktime(time_array)) + 21600 + period * 7200
+    forms = RepairForm.objects.filter(maintain_start_time=start_time)
+    unavailables = []
+    for form in forms:
+        unavailables.append(int(form.maintainer_id))
+    types = []
+    if type == 4:
+        types = [1, 2, 3]
+    else:
+        types.append(type)
+    workers = User.objects.filter(type__in=types)
+    for worker in workers:
+        if worker.user_id not in unavailables:
+            return JsonResponse({'errno': 0, 'msg': "派单成功",
+                                 'data': {'maintainer_name': worker.name, 'maintainer_phone': worker.phone,
+                                          'maintainer_id': worker.user_id, 'maintain_time': start_time}})
+    return JsonResponse({'errno': 1004, 'msg': "该时段无空闲维修工"})

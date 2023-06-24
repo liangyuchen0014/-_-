@@ -43,4 +43,5 @@ urlpatterns = [
     path('getSolution', get_solution),
     path('addSolution', add_solution),
     path('userApply', visit_apply),
+    path('autoDeliver', deliver),
 ]
