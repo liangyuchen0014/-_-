@@ -439,9 +439,9 @@ def get_client_info(request):
                 else:
                     is_paid = True
                 tmp = {
-                    'year': p.year,
+                    'year': str(p.year),
                     'ispaid': is_paid,
-                    'pay_time': p.time
+                    'pay_time': datetime.fromtimestamp(p.time).strftime('%Y-%m-%d')
                 }
                 payment.append(tmp)
 
