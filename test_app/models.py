@@ -82,12 +82,14 @@ class RepairForm(models.Model):
     description = models.TextField(blank=True, null=True)  # 问题描述
     type = models.IntegerField(default=0)  # 问题类型 1:水  2:电  3:机械  4:其他
     repair_time = models.BigIntegerField(null=True)  # 报修时间
+    period = models.IntegerField(default=0)  # 期望上门维修时间段  1: 8:00-10:00  2: 10:00-12:00  3: 14:00-16:00  4: 16:00-18:00
     room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间id(外键)
     company_name = models.CharField(max_length=255, null=True)  # 报修公司名称
     company_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 报修公司id(外键)
     contact_name = models.CharField(max_length=255, null=True)  # 报修联系人姓名
     contact_phone = models.CharField(max_length=255, null=True)  # 报修联系人电话
-    maintain_time = models.BigIntegerField(null=True)  # 上门维修时间
+    maintain_time = models.BigIntegerField(null=True)  # 上门维修时间（日期 年月日）
+
     maintainer_name = models.CharField(max_length=255, null=True)  # 维修人员姓名
     maintainer_id = models.CharField(max_length=255, null=True)  # 维修人员id
     maintainer_phone = models.CharField(max_length=255, null=True)  # 维修人员电话
@@ -104,6 +106,7 @@ class RepairForm(models.Model):
             'description': self.description,
             'type': self.type,
             'repair_time': self.repair_time,
+            'period': self.period,
             'room_id': self.room_id.id,
             'company_name': self.company_name,
             'company_id': self.company_id.user_id,

@@ -212,14 +212,18 @@ def repairReport(request):
     r_type = request.POST.get('type')
     description = request.POST.get('description')
     repair_time = time.time()
-    if not all([user_id, name, phone, room_id, r_type, description, repair_time]):
+
+    period = request.POST.get('period')
+    maintain_time = request.POST.get('maintain_time')
+    if not all([user_id, name, phone, room_id, r_type, description, period, maintain_time]):
         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     repair_form = RepairForm.objects.filter(room_id=room_id)
     for form in repair_form:
         if form.status == 0 or form.status == 1:
             return JsonResponse({'errno': 1004, 'msg': "该房间已报修"})
-    RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name,
-                              contact_phone=phone, room_id=room,
+    maintain_time = time.mktime(time.strptime(maintain_time, "%Y-%m-%d"))
+    RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name, period=period,
+                              maintain_time=maintain_time,contact_phone=phone, room_id=room,
                               type=r_type, description=description, repair_time=repair_time)
     return JsonResponse({'errno': 0, 'msg': "报修成功"})
 
@@ -270,12 +274,16 @@ def repairService(request):
     user = User.objects.filter(user_id=user_id).first()
     repair_form = RepairForm.objects.filter(maintainer_id=user_id)
     data = []
+    today = datetime.date().today()
+    tomorrow = today + datetime.timedelta(days=1)
+    print(today, tomorrow)
     for form in repair_form:
         res = form.get_info()
         ret = {
             'wid': res['id'],
             'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
-            'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d %H:%M:%S'),
+            'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d'),
+            'period': res['period'],
             'status': res['status']
         }
         data.append(ret)
@@ -305,6 +313,8 @@ def repairDetail(request):
         'contact_name': res['contact_name'],
         'contact_phone': res['contact_phone'],
         'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
+        'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d'),
+        'period': res['period'],
         'status': res['status'],
     }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': ret})
