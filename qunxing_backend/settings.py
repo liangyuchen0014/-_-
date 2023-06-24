@@ -191,7 +191,7 @@ CORS_ALLOW_HEADERS = (
 # 邮件相关配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 发送邮件配置
 EMAIL_HOST = 'smtp.qq.com'  # 服务器名称
-EMAIL_PORT = 25  # 服务端口
+EMAIL_PORT = 465  # 服务端口
 EMAIL_HOST_USER = '2827668756@qq.com'  # 自己邮箱
 EMAIL_HOST_PASSWORD = 'fyneqbxjazfidehc'  # 在邮箱中设置的客户端授权密码
 EMAIL_FROM = '群星闪耀时'  # 收件人看到的发件人
