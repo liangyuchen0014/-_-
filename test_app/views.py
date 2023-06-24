@@ -964,3 +964,21 @@ def deliver(request):
                                  'data': {'maintainer_name': worker.name, 'maintainer_phone': worker.phone,
                                           'maintainer_id': worker.user_id, 'maintain_time': start_time}})
     return JsonResponse({'errno': 1004, 'msg': "该时段无空闲维修工"})
+
+
+@csrf_exempt
+def test(request):
+    email = '2864194418@qq.com'
+    if not all([email]):
+        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+    usr = User.objects.filter(email=email).first()
+    if not usr:
+        return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+    # 生成邮箱验证码
+    sms_code = '这是一个测试'
+    # redis_default = get_redis_connection('default')
+    # redis_default.set(email, sms_code, 60 * 5)
+    status = send_sms_code(email, sms_code)
+    if not status:
+        return JsonResponse({'errno': 1004, 'msg': "验证码发送失败"})
+    return JsonResponse({'errno': 0, 'msg': "验证码发送成功"})
