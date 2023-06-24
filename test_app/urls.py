@@ -44,5 +44,5 @@ urlpatterns = [
     path('addSolution', add_solution),
     path('userApply', visit_apply),
     path('autoDeliver', deliver),
-    path('test', test),
+    path('send_reminder', send_reminder),
 ]
