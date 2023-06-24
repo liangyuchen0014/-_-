@@ -214,18 +214,29 @@ def repairReport(request):
     description = request.POST.get('description')
     repair_time = time.time()
 
-    period = request.POST.get('period')
-    maintain_time = request.POST.get('maintain_time')
-    if not all([user_id, name, phone, room_id, r_type, description, period, maintain_time]):
+    period = int(request.POST.get('period'))
+    maintain_day = request.POST.get('maintain_day')
+    # 时间拼接
+    start_time = ['08:00', '10:00', '14:00', '16:00']
+    end_time = ['10:00', '12:00', '16:00', '18:00']
+    maintain_start_time = (maintain_day + ' ' + start_time[period-1])
+    maintain_end_time = maintain_day + ' ' + end_time[period-1]
+    # 字符串转时间戳
+    mst = datetime.strptime(maintain_start_time, '%Y-%m-%d %H:%M')
+    met = datetime.strptime(maintain_end_time, '%Y-%m-%d %H:%M')
+    maintain_start_time = mst.timestamp()
+    maintain_end_time = met.timestamp()
+    if not all([user_id, name, phone, room_id, r_type, description, period, maintain_day]):
         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     repair_form = RepairForm.objects.filter(room_id=room_id)
     for form in repair_form:
         if form.status == 0 or form.status == 1:
             return JsonResponse({'errno': 1004, 'msg': "该房间已报修"})
-    maintain_time = time.mktime(time.strptime(maintain_time, "%Y-%m-%d"))
+    maintain_time = time.mktime(time.strptime(maintain_day, "%Y-%m-%d"))
     RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name, period=period,
                               maintain_time=maintain_time, contact_phone=phone, room_id=room,
-                              type=r_type, description=description, repair_time=repair_time)
+                              type=r_type, description=description, repair_time=repair_time,
+                              maintain_start_time=maintain_start_time, maintain_end_time=maintain_end_time)
     return JsonResponse({'errno': 0, 'msg': "报修成功"})
 
 
@@ -244,16 +255,16 @@ def myRepair(request):
     data = []
     for form in repair_form:
         res = form.get_info()
-        if res['status'] == 0:
-            maintain_time = None
-        else:
-            maintain_time = datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d %H:%M:%S')
+        maintain_time = datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d')+ ' ' \
+                        + datetime.fromtimestamp(res['maintain_start_time']).strftime('%H:%M') + '-' \
+                        + datetime.fromtimestamp(res['maintain_end_time']).strftime('%H:%M')
         ret = {
             'wid': res['id'],
             'rid': res['room_id'],
             'type': res['type'],
             'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
             'maintain_time': maintain_time,
+            'period': res['period'],
             'status': res['status'],
             'maintainer_name': res['maintainer_name'],
             'maintainer_phone': res['maintainer_phone'],
@@ -283,7 +294,7 @@ def repairService(request):
         ret = {
             'wid': res['id'],
             'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
-            'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d'),
+            'maintain_time': datetime.fromtimestamp(res['maintain_day']).strftime('%Y-%m-%d'),
             'period': res['period'],
             'status': res['status']
         }
@@ -316,7 +327,7 @@ def repairDetail(request):
         'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
         'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d'),
         'period': res['period'],
-        'status': res['status'],
+        'status': res['status']
     }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': ret})
 
@@ -676,19 +687,20 @@ def get_lease_room(request):
 def get_maintain_num(request):
     if request.method != 'GET':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    repair_forms = RepairForm.objects.filter(status=2).order_by('solve_time')
+    repair_forms = RepairForm.objects.filter(status=2).order_by('-solve_time')
     # 按年份统计不同种类的维修工作的数量
     data = []
     works_year = []
     ret = {
-        'year': 0,
+        'year': '',
         'number_water': 0,
         'number_elec': 0,
         'number_mecha': 0,
-        'number_other': 0
+        'number_other': 0,
+        'number_total': 0
     }
     for repair_form in repair_forms:
-        year = int(repair_form.maintain_time.strftime('%Y'))
+        year = repair_form.solve_time.strftime('%Y')
         status = int(repair_form.status)
         flag = False
         for work_year in works_year:
@@ -702,6 +714,7 @@ def get_maintain_num(request):
                     work_year['number_mecha'] += 1
                 elif status == 4:
                     work_year['number_other'] += 1
+                work_year['number_total'] += 1
                 break
         if not flag:
             ret['year'] = year
@@ -713,16 +726,149 @@ def get_maintain_num(request):
                 ret['number_mecha'] += 1
             elif status == 4:
                 ret['number_other'] += 1
+            ret['number_total'] += 1
             works_year.append(ret)
             ret = {
-                'year': 0,
+                'year': '',
                 'number_water': 0,
                 'number_elec': 0,
                 'number_mecha': 0,
-                'number_other': 0
+                'number_other': 0,
+                'number_total': 0
             }
     data.append(works_year)
-    # 按月份统计不同种类的维修工作的数量（
+    # 按月份统计不同种类的维修工作的数量（yyyy-mm格式的字符串，按照时间倒序排列)
+    works_month = []
+    ret = {
+        'month': '',
+        'number_water': 0,
+        'number_elec': 0,
+        'number_mecha': 0,
+        'number_other': 0,
+        'number_total': 0
+    }
+    for repair_form in repair_forms:
+        month = repair_form.maintain_time.strftime('%Y-%m')
+        status = int(repair_form.status)
+        flag = False
+        for work_month in works_month:
+            if month == work_month.get('month'):
+                flag = True
+                if status == 1:
+                    work_month['number_water'] += 1
+                elif status == 2:
+                    work_month['number_elec'] += 1
+                elif status == 3:
+                    work_month['number_mecha'] += 1
+                elif status == 4:
+                    work_month['number_other'] += 1
+                work_month['number_total'] += 1
+                break
+        if not flag:
+            ret['month'] = month
+            if status == 1:
+                ret['number_water'] += 1
+            elif status == 2:
+                ret['number_elec'] += 1
+            elif status == 3:
+                ret['number_mecha'] += 1
+            elif status == 4:
+                ret['number_other'] += 1
+            ret['number_total'] += 1
+            works_month.append(ret)
+            ret = {
+                'month': '',
+                'number_water': 0,
+                'number_elec': 0,
+                'number_mecha': 0,
+                'number_other': 0,
+                'number_total': 0
+            }
+    data.append(works_month)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+# 获取访客数量（按照最近七天，最近6个月，最近5年，公司统计(公司也按照最近七天，最近6个月，最近5年统计)）
+@csrf_exempt
+def get_visitor_num(request):
+    if request.method != 'GET':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    visitors = Visitor.objects.all().order_by('-visit_time')
+    # 按照最近七天统计
+    data = []
+    visitors_week = []
+    ret = {
+        'day': '',
+        'number': 0
+    }
+    for visitor in visitors:
+        day = visitor.visit_time.strftime('%Y-%m-%d')
+        flag = False
+        for visitor_day in visitors_week:
+            if day == visitor_day.get('day'):
+                flag = True
+                visitor_day['number'] += 1
+                break
+        if not flag:
+            ret['day'] = day
+            ret['number'] += 1
+            visitors_week.append(ret)
+            ret = {
+                'day': '',
+                'number': 0
+            }
+    data.append(visitors_week)
+    # 按照最近6个月统计
+    visitors_month = []
+    ret = {
+        'month': '',
+        'number': 0
+    }
+    for visitor in visitors:
+        month = visitor.visit_time.strftime('%Y-%m')
+        flag = False
+        for visitor_month in visitors_month:
+            if month == visitor_month.get('month'):
+                flag = True
+                visitor_month['number'] += 1
+                break
+        if not flag:
+            ret['month'] = month
+            ret['number'] += 1
+            visitors_month.append(ret)
+            ret = {
+                'month': '',
+                'number': 0
+            }
+    data.append(visitors_month)
+    # 按照最近5年统计
+    visitors_year = []
+    ret = {
+        'year': '',
+        'number': 0
+    }
+    for visitor in visitors:
+        year = visitor.visit_time.strftime('%Y')
+        flag = False
+        for visitor_year in visitors_year:
+            if year == visitor_year.get('year'):
+                flag = True
+                visitor_year['number'] += 1
+                break
+        if not flag:
+            ret['year'] = year
+            ret['number'] += 1
+            visitors_year.append(ret)
+            ret = {
+                'year': '',
+                'number': 0
+            }
+    data.append(visitors_year)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+
+
 
 
 @csrf_exempt
