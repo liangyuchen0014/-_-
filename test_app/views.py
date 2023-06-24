@@ -424,14 +424,6 @@ def get_client_info(request):
         room_info = []
         payment = []  # 需要修改数据库设计
         for r in rooms:
-            tmp = {
-                'id': r.room_id_id,
-                'start_time': datetime.fromtimestamp(r.start_time).strftime('%Y-%m-%d'),
-                'end_time': datetime.fromtimestamp(r.end_time).strftime('%Y-%m-%d'),
-                'sign_time': datetime.fromtimestamp(r.contract_time).strftime('%Y-%m-%d')
-            }
-
-            room_info.append(tmp)
             payments = Payment.objects.filter(lease_id=r.id).all()
             for p in payments:
                 if not p.time:
@@ -444,6 +436,14 @@ def get_client_info(request):
                     'pay_time': datetime.fromtimestamp(p.time).strftime('%Y-%m-%d')
                 }
                 payment.append(tmp)
+            tmp = {
+                'id': r.room_id_id,
+                'start_time': datetime.fromtimestamp(r.start_time).strftime('%Y-%m-%d'),
+                'end_time': datetime.fromtimestamp(r.end_time).strftime('%Y-%m-%d'),
+                'sign_time': datetime.fromtimestamp(r.contract_time).strftime('%Y-%m-%d'),
+                'payment': payment
+            }
+            room_info.append(tmp)
 
         ret = {
             'legal_person': c.legal_person,
@@ -451,7 +451,6 @@ def get_client_info(request):
             'name': c.name,
             'phone': c.phone,
             'room': room_info,
-            'payment': payment,
             'id': c.user_id
         }
         clients.append(ret)
