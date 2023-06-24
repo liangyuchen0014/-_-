@@ -42,4 +42,5 @@ urlpatterns = [
     path('getLeaseRoom', get_lease_room),
     path('getSolution', get_solution),
     path('addSolution', add_solution),
+    path('userApply', visit_apply),
 ]

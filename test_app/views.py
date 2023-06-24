@@ -656,6 +656,8 @@ def get_lease_room(request):
     if user_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     user = User.objects.filter(user_id=user_id).first()
+    if not user:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     room_list = Lease.objects.filter(user_id=user).all()
     data = []
     for room in room_list:
@@ -698,3 +700,25 @@ def add_solution(request):
         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
     Wiki.objects.create(description=problem, solution=solution)
     return JsonResponse({'errno': 0, 'msg': "添加成功"})
+
+
+@csrf_exempt
+def visit_apply(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    name = request.POST.get('user_name')
+    number = request.POST.get('user_id')
+    phone = request.POST.get('phone_num')
+    visit_time = int(request.POST.get('visit_time'))
+    if not all([token, name, number, phone, visit_time]):
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    user_id = decode_token(token)
+    if user_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    user = User.objects.filter(user_id=user_id).first()
+    if not user:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    Visitor.objects.create(name=name, number=number, visit_time=visit_time, phone=phone, apply_time=time.time(),
+                           user_id=user)
+    return JsonResponse({'errno': 0, 'msg': "申请成功"})
