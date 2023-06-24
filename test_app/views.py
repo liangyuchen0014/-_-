@@ -677,3 +677,24 @@ def get_solution(request):
     for issue in issues:
         data.append({'problem': issue.description, 'solution': issue.solution})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+@csrf_exempt
+def add_solution(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    problem = request.POST.get('problem')
+    solution = request.POST.get('solution')
+    if not all([token, problem, solution]):
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+    Wiki.objects.create(description=problem, solution=solution)
+    return JsonResponse({'errno': 0, 'msg': "添加成功"})
