@@ -150,8 +150,8 @@ def send_email_code(request):
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
     # 生成邮箱验证码
     sms_code = '%06d' % random.randint(0, 999999)
-    redis_default = get_redis_connection('default')
-    redis_default.set(email, sms_code, 60 * 5)
+    # redis_default = get_redis_connection('default')
+    # redis_default.set(email, sms_code, 60 * 5)
     status = send_sms_code(email, sms_code)
     if not status:
         return JsonResponse({'errno': 1004, 'msg': "验证码发送失败"})
