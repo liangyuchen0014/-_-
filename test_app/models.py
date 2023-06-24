@@ -11,7 +11,7 @@ class User(AbstractUser):
     description = models.TextField(blank=True, null=True)
     post = models.CharField(max_length=255, null=True)  # 岗位
     type = models.IntegerField(default=0)  # 0:客户  1:水  2:电  3:机械  -1:管理人员
-    is_available = models.IntegerField(default=1)  # 0:不空闲  1:空闲
+    # is_available = models.IntegerField(default=1)  # 0:不空闲  1:空闲
     head_url = models.TextField(blank=True, null=True)
 
     def get_info(self):
@@ -26,16 +26,16 @@ class User(AbstractUser):
             'description': self.description,
             'post': self.post,
             'type': self.type,
-            'is_available': self.is_available,
+            # 'is_available': self.is_available,
             'head_url': self.head_url
         }
 
 
 class Payment(models.Model):
     id = models.AutoField(primary_key=True)
-    year = models.IntegerField(null=True)   # 按年份给出物业费缴纳信息
+    year = models.IntegerField(null=True)  # 按年份给出物业费缴纳信息
     lease_id = models.ForeignKey('Lease', on_delete=models.DO_NOTHING, null=True)  # 租赁信息id
-    time = models.BigIntegerField(null=True)    # 若时间为空则为未缴纳，不为空则已缴纳
+    time = models.BigIntegerField(null=True)  # 若时间为空则为未缴纳，不为空则已缴纳
 
 
 class Visitor(models.Model):
@@ -77,6 +77,7 @@ class Lease(models.Model):
             'contract_time': self.contract_time
         }
 
+
 class RepairForm(models.Model):
     id = models.AutoField(primary_key=True)
     description = models.TextField(blank=True, null=True)  # 问题描述
@@ -88,7 +89,9 @@ class RepairForm(models.Model):
     company_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 报修公司id(外键)
     contact_name = models.CharField(max_length=255, null=True)  # 报修联系人姓名
     contact_phone = models.CharField(max_length=255, null=True)  # 报修联系人电话
-    maintain_time = models.BigIntegerField(null=True)  # 上门维修时间（日期 年月日）
+    maintain_day = models.BigIntegerField(null=True)  # 上门维修时间（日期 年月日）
+    maintain_start_time = models.BigIntegerField(null=True)  # 上门维修时间（开始时间）
+    maintain_end_time = models.BigIntegerField(null=True)  # 上门维修时间（结束时间）
 
     maintainer_name = models.CharField(max_length=255, null=True)  # 维修人员姓名
     maintainer_id = models.CharField(max_length=255, null=True)  # 维修人员id
@@ -112,7 +115,9 @@ class RepairForm(models.Model):
             'company_id': self.company_id.user_id,
             'contact_name': self.contact_name,
             'contact_phone': self.contact_phone,
-            'maintain_time': self.maintain_time,
+            'maintain_day': self.maintain_day,
+            'maintain_start_time': self.maintain_start_time,
+            'maintain_end_time': self.maintain_end_time,
             'maintainer_name': self.maintainer_name,
             'maintainer_id': self.maintainer_id,
             'maintainer_phone': self.maintainer_phone,

@@ -1,9 +1,10 @@
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
+
 from django.views.decorators.csrf import csrf_exempt
 from django_redis import get_redis_connection
 from rest_framework_jwt.settings import api_settings
@@ -274,8 +275,8 @@ def repairService(request):
     user = User.objects.filter(user_id=user_id).first()
     repair_form = RepairForm.objects.filter(maintainer_id=user_id)
     data = []
-    today = datetime.date().today()
-    tomorrow = today + datetime.timedelta(days=1)
+    today = datetime.today().strftime('%Y-%m-%d')
+    tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
     print(today, tomorrow)
     for form in repair_form:
         res = form.get_info()
@@ -668,6 +669,60 @@ def get_lease_room(request):
             }
             data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+# 获取维修工作数量
+@csrf_exempt
+def get_maintain_num(request):
+    if request.method != 'GET':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    repair_forms = RepairForm.objects.filter(status=2).order_by('solve_time')
+    # 按年份统计不同种类的维修工作的数量
+    data = []
+    works_year = []
+    ret = {
+        'year': 0,
+        'number_water': 0,
+        'number_elec': 0,
+        'number_mecha': 0,
+        'number_other': 0
+    }
+    for repair_form in repair_forms:
+        year = int(repair_form.maintain_time.strftime('%Y'))
+        status = int(repair_form.status)
+        flag = False
+        for work_year in works_year:
+            if year == work_year.get('year'):
+                flag = True
+                if status == 1:
+                    work_year['number_water'] += 1
+                elif status == 2:
+                    work_year['number_elec'] += 1
+                elif status == 3:
+                    work_year['number_mecha'] += 1
+                elif status == 4:
+                    work_year['number_other'] += 1
+                break
+        if not flag:
+            ret['year'] = year
+            if status == 1:
+                ret['number_water'] += 1
+            elif status == 2:
+                ret['number_elec'] += 1
+            elif status == 3:
+                ret['number_mecha'] += 1
+            elif status == 4:
+                ret['number_other'] += 1
+            works_year.append(ret)
+            ret = {
+                'year': 0,
+                'number_water': 0,
+                'number_elec': 0,
+                'number_mecha': 0,
+                'number_other': 0
+            }
+    data.append(works_year)
+    # 按月份统计不同种类的维修工作的数量（
 
 
 @csrf_exempt

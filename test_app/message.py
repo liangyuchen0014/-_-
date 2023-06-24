@@ -10,7 +10,7 @@ def send_sms_code(to_email, sms_code):
     :param to_mail: 发到这个邮箱
     :return: 成功：0 失败 -1
     """
-    EMAIL_FROM = "2827668756@qq.com"  # 邮箱来自
+    EMAIL_FROM = "lightseeker157@163.com"  # 邮箱来自
     email_title = '群星验证码'
     email_body = "您的邮箱验证码为：{0}, 该验证码有效时间为两分钟，请及时进行验证。".format(sms_code)
     # send_status函数作用
