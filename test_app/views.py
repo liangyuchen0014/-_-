@@ -219,8 +219,8 @@ def repairReport(request):
     # 时间拼接
     start_time = ['08:00', '10:00', '14:00', '16:00']
     end_time = ['10:00', '12:00', '16:00', '18:00']
-    maintain_start_time = (maintain_day + ' ' + start_time[period-1])
-    maintain_end_time = maintain_day + ' ' + end_time[period-1]
+    maintain_start_time = (maintain_day + ' ' + start_time[period - 1])
+    maintain_end_time = maintain_day + ' ' + end_time[period - 1]
     # 字符串转时间戳
     mst = datetime.strptime(maintain_start_time, '%Y-%m-%d %H:%M')
     met = datetime.strptime(maintain_end_time, '%Y-%m-%d %H:%M')
@@ -255,7 +255,7 @@ def myRepair(request):
     data = []
     for form in repair_form:
         res = form.get_info()
-        maintain_time = datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d')+ ' ' \
+        maintain_time = datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d') + ' ' \
                         + datetime.fromtimestamp(res['maintain_start_time']).strftime('%H:%M') + '-' \
                         + datetime.fromtimestamp(res['maintain_end_time']).strftime('%H:%M')
         ret = {
@@ -652,9 +652,14 @@ def get_worker(request):
     workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
     r = []
     for worker in workers:
+        t = time.time()
+        form = RepairForm.objects.filter(maintainer_id=worker.user_id).filter(maintain_start_time__lte=t).filter(
+            maintain_end_time__gte=t).filter(status__lt=2).first()
+        k = 1
+        if form:
+            k = 0
         r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
-                  'isMaintainer': worker.type != -1,  # TODO
-                  'category': str(worker.type), 'isAvailable': worker.is_available})
+                  'isMaintainer': worker.type != -1, 'category': str(worker.type), 'isAvailable': k})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
 
 
@@ -865,10 +870,6 @@ def get_visitor_num(request):
             }
     data.append(visitors_year)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
-
-
-
-
 
 
 @csrf_exempt
