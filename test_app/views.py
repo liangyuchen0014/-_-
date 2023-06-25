@@ -226,7 +226,7 @@ def repairReport(request):
     met = datetime.strptime(maintain_end_time, '%Y-%m-%d %H:%M')
     maintain_start_time = mst.timestamp()
     maintain_end_time = met.timestamp()
-    maintain_day= time.mktime(time.strptime(maintain_day, "%Y-%m-%d"))
+    maintain_day = time.mktime(time.strptime(maintain_day, "%Y-%m-%d"))
     if not all([user_id, name, phone, room_id, r_type, description, period, maintain_day]):
         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     repair_form = RepairForm.objects.filter(room_id=room_id)
@@ -934,8 +934,16 @@ def visit_apply(request):
     user = User.objects.filter(user_id=user_id).first()
     if not user:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    t = datetime.fromtimestamp(visit_time).strftime('%Y-%m-%d')
+    time_array = time.strptime(t, '%Y-%m-%d')
+    start = int(time.mktime(time_array))
+    end = start + 86400
+    visitor = Visitor.objects.filter(visit_time__gte=start).filter(visit_time__lt=end).first()
+    if visitor:
+        return JsonResponse({'errno': 1003, 'msg': "该访客已申请过"})
+    password = '%06d' % random.randint(0, 999999)
     Visitor.objects.create(name=name, number=number, visit_time=visit_time, phone=phone, apply_time=time.time(),
-                           user_id=user)
+                           user_id=user, password=password)
     return JsonResponse({'errno': 0, 'msg': "申请成功"})
 
 

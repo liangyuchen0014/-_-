@@ -46,6 +46,7 @@ class Visitor(models.Model):
     visit_time = models.BigIntegerField(null=True)  # 到访时间
     phone = models.CharField(max_length=255, null=True)  # 电话
     apply_time = models.BigIntegerField(null=True)  # 申请时间
+    password = models.CharField(max_length=255, null=True)  # 动态密码
 
 
 class Wiki(models.Model):
