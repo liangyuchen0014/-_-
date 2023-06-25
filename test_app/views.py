@@ -606,12 +606,17 @@ def repairList(request):
     data = []
     for form in repair_form:
         res = form.get_info()
+        maintain_time = datetime.fromtimestamp(res['maintain_day']).strftime('%Y-%m-%d') + ' ' \
+                        + datetime.fromtimestamp(res['maintain_start_time']).strftime('%H:%M') + '-' \
+                        + datetime.fromtimestamp(res['maintain_end_time']).strftime('%H:%M')
         ret = {
             'form_id': res['id'],
+            'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
+            'expect_time': maintain_time,
             'user_id': res['company_id'],
             'room_id': res['room_id'],
             'status': res['status'],
-            'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S')
+            'type': res['type'],
         }
         data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
