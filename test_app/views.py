@@ -105,37 +105,6 @@ def change_user_info(request):
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
 
 
-# @csrf_exempt
-# def change_user_info(request):
-#     if request.method != 'POST':
-#         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-#     token = request.POST.get('token')
-#     user_id = decode_token(token)
-#     if user_id == -1:
-#         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-#     t = request.POST.get('type')
-#     content = request.POST.get('content')
-#     if not all([token, t, content]):
-#         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
-#     usr = User.objects.filter(user_id=user_id).first()
-#     if not usr:
-#         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-#     if t not in ['0', '1', '2']:
-#         return JsonResponse({'errno': 1004, 'msg': "类型错误"})
-#     t = int(t)
-#     if t == 0:
-#         usr.username = content
-#     elif t == 1:
-#         usr.description = content
-#     elif t == 2:
-#         name = str(time.time()) + 'qwerty'
-#         new_user = User.objects.create_user(username=name, password=content)
-#         usr.password = new_user.password
-#         new_user.delete()
-#     usr.save()
-#     return JsonResponse({'errno': 0, 'msg': "修改成功"})
-
-
 # 获取用户信息
 @csrf_exempt
 def get_user_info(request):
@@ -1122,31 +1091,6 @@ def change_payment(request):
     else:
         payment = Payment.objects.filter(lease_id=lease, year=year).first()
         payment.time = None
-    return JsonResponse({'errno': 0, 'msg': "修改成功"})
-
-
-@csrf_exempt
-def change_user_info(request):
-    if request.method != 'POST':
-        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    token = request.POST.get('token')
-    admin_id = decode_token(token)
-    if admin_id == -1:
-        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-    admin = User.objects.filter(user_id=admin_id).first()
-    if not admin:
-        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-    new_name = request.POST.get('new_name')
-    new_phone = request.POST.get('new_phone')
-    new_legal = request.POST.get('new_legal')
-    new_email = request.POST.get('new_email')
-    new_description = request.POST.get('new_description')
-    admin.name = new_name
-    admin.phone = new_phone
-    admin.legal_person = new_legal
-    admin.email = new_email
-    admin.description = new_description
-    admin.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
 
 
