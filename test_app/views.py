@@ -284,21 +284,21 @@ def repairService(request):
     user_id = decode_token(token)
     if user_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-    user = User.objects.filter(user_id=user_id).first()
     repair_form = RepairForm.objects.filter(maintainer_id=user_id)
     data = []
     today = datetime.today().strftime('%Y-%m-%d')
-    # tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
-    # print(today, tomorrow)
+    tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
     taskCount = {
         'sum': repair_form.count(),
-        'today': [0, 0, 0, 0]
+        'today': []
     }
     repair = []
+    today_num = [0, 0, 0, 0]
     for form in repair_form:
         res = form.get_info()
-        if res['maintain_day'] == today:
-            taskCount['today'][res['period'] - 1] = 1
+        maintain_day = datetime.fromtimestamp(res['maintain_day']).strftime('%Y-%m-%d')
+        if maintain_day == today:
+            today_num[int(res['period'] - 1)] = 1
         ret = {
             'wid': res['id'],
             'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
@@ -307,8 +307,11 @@ def repairService(request):
             'status': res['status']
         }
         repair.append(ret)
-    data.append(taskCount)
-    data.append(repair)
+    taskCount['today'] = today_num
+    data = {
+        'taskCount':taskCount,
+        'repair':repair
+    }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
@@ -335,7 +338,7 @@ def repairDetail(request):
         'contact_name': res['contact_name'],
         'contact_phone': res['contact_phone'],
         'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
-        'maintain_time': datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d'),
+        'maintain_day': datetime.fromtimestamp(res['maintain_day']).strftime('%Y-%m-%d'),
         'period': res['period'],
         'status': res['status']
     }
