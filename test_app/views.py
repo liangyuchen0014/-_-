@@ -737,7 +737,7 @@ def get_lease_room(request):
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
-# 获取维修工作数量
+# 获取维修工作数量（按照最近5年 最近6个月统计）
 @csrf_exempt
 def get_maintain_num(request):
     if request.method != 'GET':
@@ -746,16 +746,17 @@ def get_maintain_num(request):
     # 按年份统计不同种类的维修工作的数量
     data = []
     works_year = []
-    ret = {
-        'year': '',
-        'number_water': 0,
-        'number_elec': 0,
-        'number_mecha': 0,
-        'number_other': 0,
-        'number_total': 0
-    }
+    for i in range(5):
+        works_year.append({
+            'year': str(datetime.now().year - (4 - i)),
+            'number_water': 0,
+            'number_elec': 0,
+            'number_mecha': 0,
+            'number_other': 0,
+            'number_total': 0
+        })
     for repair_form in repair_forms:
-        year = repair_form.solve_time.strftime('%Y')
+        year = datetime.fromtimestamp(repair_form.solve_time).strftime('%Y')
         status = int(repair_form.status)
         flag = False
         for work_year in works_year:
@@ -772,42 +773,25 @@ def get_maintain_num(request):
                 work_year['number_total'] += 1
                 break
         if not flag:
-            ret['year'] = year
-            if status == 1:
-                ret['number_water'] += 1
-            elif status == 2:
-                ret['number_elec'] += 1
-            elif status == 3:
-                ret['number_mecha'] += 1
-            elif status == 4:
-                ret['number_other'] += 1
-            ret['number_total'] += 1
-            works_year.append(ret)
-            ret = {
-                'year': '',
-                'number_water': 0,
-                'number_elec': 0,
-                'number_mecha': 0,
-                'number_other': 0,
-                'number_total': 0
-            }
-    data.append(works_year)
+            break
     # 按月份统计不同种类的维修工作的数量（yyyy-mm格式的字符串，按照时间倒序排列)
     works_month = []
-    ret = {
-        'month': '',
-        'number_water': 0,
-        'number_elec': 0,
-        'number_mecha': 0,
-        'number_other': 0,
-        'number_total': 0
-    }
+    for i in [5, 4, 3, 2, 1, 0]:
+        month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
+        works_month.append({
+            'month': month,
+            'number_water': 0,
+            'number_elec': 0,
+            'number_mecha': 0,
+            'number_other': 0,
+            'number_total': 0
+        })
     for repair_form in repair_forms:
-        month = repair_form.maintain_time.strftime('%Y-%m')
+        month = datetime.fromtimestamp(repair_form.solve_time).strftime('%Y-%m')
         status = int(repair_form.status)
         flag = False
         for work_month in works_month:
-            if month == work_month.get('month'):
+            if month == work_month['month']:
                 flag = True
                 if status == 1:
                     work_month['number_water'] += 1
@@ -820,42 +804,31 @@ def get_maintain_num(request):
                 work_month['number_total'] += 1
                 break
         if not flag:
-            ret['month'] = month
-            if status == 1:
-                ret['number_water'] += 1
-            elif status == 2:
-                ret['number_elec'] += 1
-            elif status == 3:
-                ret['number_mecha'] += 1
-            elif status == 4:
-                ret['number_other'] += 1
-            ret['number_total'] += 1
-            works_month.append(ret)
-            ret = {
-                'month': '',
-                'number_water': 0,
-                'number_elec': 0,
-                'number_mecha': 0,
-                'number_other': 0,
-                'number_total': 0
-            }
-    data.append(works_month)
+            break
+    data = {
+        'works_year': works_year,
+        'works_month': works_month
+    }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
-# 获取访客数量（按照最近七天，最近6个月，最近5年，公司统计(公司也按照最近七天，最近6个月，最近5年统计)）
+# 获取访客数量（按照最近14天，最近12个月，公司统计(公司也按照最近14天，最近12个月)）
 @csrf_exempt
 def get_visitor_num(request):
     if request.method != 'GET':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     visitors = Visitor.objects.all().order_by('-visit_time')
-    # 按照最近七天统计
+    # 按照最近14天统计
     data = []
     visitors_week = []
-    ret = {
-        'day': '',
-        'number': 0
-    }
+    for i in range(14):
+        day = (datetime.now() - timedelta(days=(13-i))).strftime('%Y-%m-%d')
+        visitors_week.append(0)
+        ret = {
+            'day': day,
+            'number': 0
+        }
+        visitors_week.append(ret)
     for visitor in visitors:
         day = visitor.visit_time.strftime('%Y-%m-%d')
         flag = False
@@ -865,20 +838,17 @@ def get_visitor_num(request):
                 visitor_day['number'] += 1
                 break
         if not flag:
-            ret['day'] = day
-            ret['number'] += 1
-            visitors_week.append(ret)
-            ret = {
-                'day': '',
-                'number': 0
-            }
-    data.append(visitors_week)
-    # 按照最近6个月统计
+            break
+    # 按照最近12个月统计
     visitors_month = []
-    ret = {
-        'month': '',
-        'number': 0
-    }
+    for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
+        month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
+        ret = {
+            'month': month,
+            'number': 0
+        }
+        visitors_month.append(ret)
+
     for visitor in visitors:
         month = visitor.visit_time.strftime('%Y-%m')
         flag = False
@@ -888,13 +858,7 @@ def get_visitor_num(request):
                 visitor_month['number'] += 1
                 break
         if not flag:
-            ret['month'] = month
-            ret['number'] += 1
-            visitors_month.append(ret)
-            ret = {
-                'month': '',
-                'number': 0
-            }
+            break
     data.append(visitors_month)
     # 按照最近5年统计
     visitors_year = []
@@ -920,6 +884,8 @@ def get_visitor_num(request):
             }
     data.append(visitors_year)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+    # 按照公司统计，公司也按照最近14天，最近12个月统计
+    # 公司列表
 
 
 @csrf_exempt
