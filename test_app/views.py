@@ -823,8 +823,8 @@ def get_visitor_num(request):
     if request.method != 'GET':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     visitors = Visitor.objects.all().order_by('-visit_time')
-    # 按照最近14天统计
     data = []
+    # 按照最近14天统计
     sum_visitors_day = []
     for i in range(14):
         day = (datetime.now() - timedelta(days=(13 - i))).strftime('%Y-%m-%d')
@@ -864,6 +864,12 @@ def get_visitor_num(request):
                 break
         if not flag:
             break
+    ret = {
+        'name': '总访客数',
+        'visitors_day': sum_visitors_day,
+        'visitors_month': sum_visitors_month
+    }
+    data.append(ret)
     # 按照公司统计，公司也按照最近14天，最近12个月统计
     # 公司列表
     sum_company = []
@@ -879,7 +885,7 @@ def get_visitor_num(request):
             }
             visitors_day.append(ret)
         visitors_month = []
-        for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]:
+        for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1,0]:
             month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
             ret = {
                 'month': month,
@@ -906,6 +912,7 @@ def get_visitor_num(request):
                         visitor_month['number'] += 1
                         break
                 break
+    data.extend(sum_company)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
