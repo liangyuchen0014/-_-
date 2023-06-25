@@ -1009,3 +1009,21 @@ def send_reminder(request):
         if not status:
             print("验证码发送失败")
     return JsonResponse({'errno': 0, 'msg': "邮件发送完成"})
+
+
+@csrf_exempt
+def visit_verify(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    password = request.POST.get('password')
+    number = request.POST.get('number')
+    t = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
+    time_array = time.strptime(t, '%Y-%m-%d')
+    start = int(time.mktime(time_array))
+    end = start + 86400
+    visitor = Visitor.objects.filter(number=number).filter(visit_time__gte=start).filter(visit_time__lt=end).first()
+    if not visitor:
+        return JsonResponse({'errno': 1002, 'msg': "未查询到申请记录"})
+    if password != visitor.password:
+        return JsonResponse({'errno': 1003, 'msg': "动态密码错误"})
+    return JsonResponse({'errno': 0, 'msg': "认证成功"})
