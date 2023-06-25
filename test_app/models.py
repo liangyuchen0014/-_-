@@ -41,6 +41,7 @@ class Payment(models.Model):
 class Visitor(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 客户id
+    company = models.CharField(max_length=255, null=True)  # 公司
     name = models.CharField(max_length=255, null=True)  # 访客人员姓名
     number = models.CharField(max_length=255, null=True)  # 身份证号码
     visit_time = models.BigIntegerField(null=True)  # 到访时间

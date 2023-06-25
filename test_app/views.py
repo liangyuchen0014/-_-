@@ -985,7 +985,7 @@ def visit_apply(request):
         return JsonResponse({'errno': 1003, 'msg': "该访客已申请过"})
     password = '%06d' % random.randint(0, 999999)
     Visitor.objects.create(name=name, number=number, visit_time=visit_time, phone=phone, apply_time=time.time(),
-                           user_id=user, password=password)
+                           user_id=user, password=password, company=user.company)
     return JsonResponse({'errno': 0, 'msg': "申请成功"})
 
 
