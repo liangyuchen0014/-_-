@@ -827,7 +827,7 @@ def get_visitor_num(request):
     data = []
     visitors_week = []
     for i in range(14):
-        day = (datetime.now() - timedelta(days=(13-i))).strftime('%Y-%m-%d')
+        day = (datetime.now() - timedelta(days=(13 - i))).strftime('%Y-%m-%d')
         visitors_week.append(0)
         ret = {
             'day': day,
@@ -888,9 +888,11 @@ def get_visitor_num(request):
                 'number': 0
             }
     data.append(visitors_year)
-    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
     # 按照公司统计，公司也按照最近14天，最近12个月统计
     # 公司列表
+    companies = Visitor.objects.values('company').distinct()
+    print(companies)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
 @csrf_exempt
@@ -1118,3 +1120,21 @@ def change_user_info(request):
     admin.description = new_description
     admin.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
+
+
+# 添加维修工人
+@csrf_exempt
+def add_worker(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    try:
+        name = request.POST.get('name')
+        phone = request.POST.get('phone')
+        post = request.POST.get('post')
+        re_type = request.POST.get('type')
+        email = request.POST.get('email')
+        User.objects.create_user(name=name, phone=phone, post=post, type=re_type, username=email, email=email,
+                                 password=email)
+    except:
+        return JsonResponse({'errno': 1002, 'msg': "添加失败"})
+    return JsonResponse({'errno': 0, 'msg': "添加成功"})
