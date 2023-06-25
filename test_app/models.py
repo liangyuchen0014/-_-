@@ -47,6 +47,7 @@ class Visitor(models.Model):
     phone = models.CharField(max_length=255, null=True)  # 电话
     apply_time = models.BigIntegerField(null=True)  # 申请时间
     password = models.CharField(max_length=255, null=True)  # 动态密码
+    status = models.IntegerField(default=0)  # 是否发送过动态密码 0-发送 1-已发送
 
 
 class Wiki(models.Model):

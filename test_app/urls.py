@@ -20,7 +20,7 @@ from .views import *
 urlpatterns = [
     path('register', register),
     path('login', user_login),
-    path('change_user_info', change_user_info),
+    path('changeUserInfo', change_user_info),
     path('get_user_info', get_user_info),
     path('forget_password', forget_password),
     path('send_email_code', send_email_code),

@@ -74,30 +74,64 @@ def change_user_info(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
+    if not token:
+        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     user_id = decode_token(token)
     if user_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-    t = request.POST.get('type')
-    content = request.POST.get('content')
-    if not all([token, t, content]):
-        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+    new_name = request.POST.get('new_name')
+    new_phone = request.POST.get('new_phone')
+    new_legal = request.POST.get('new_legal')
+    new_email = request.POST.get('new_email')
+    new_description = request.POST.get('new_description')
     usr = User.objects.filter(user_id=user_id).first()
     if not usr:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    if t not in ['0', '1', '2']:
-        return JsonResponse({'errno': 1004, 'msg': "类型错误"})
-    t = int(t)
-    if t == 0:
-        usr.username = content
-    elif t == 1:
-        usr.description = content
-    elif t == 2:
-        name = str(time.time()) + 'qwerty'
-        new_user = User.objects.create_user(username=name, password=content)
-        usr.password = new_user.password
-        new_user.delete()
+    if new_name:
+        usr.name = new_name
+    if new_phone:
+        usr.phone = new_phone
+    if new_legal:
+        usr.legal_person = new_legal
+    if new_description:
+        usr.description = new_description
+    if new_email:
+        if User.objects.filter(email=new_email).first():
+            return JsonResponse({'errno': 1004, 'msg': "该邮箱已注册"})
+        usr.email = new_email
     usr.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
+
+
+# @csrf_exempt
+# def change_user_info(request):
+#     if request.method != 'POST':
+#         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+#     token = request.POST.get('token')
+#     user_id = decode_token(token)
+#     if user_id == -1:
+#         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+#     t = request.POST.get('type')
+#     content = request.POST.get('content')
+#     if not all([token, t, content]):
+#         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+#     usr = User.objects.filter(user_id=user_id).first()
+#     if not usr:
+#         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
+#     if t not in ['0', '1', '2']:
+#         return JsonResponse({'errno': 1004, 'msg': "类型错误"})
+#     t = int(t)
+#     if t == 0:
+#         usr.username = content
+#     elif t == 1:
+#         usr.description = content
+#     elif t == 2:
+#         name = str(time.time()) + 'qwerty'
+#         new_user = User.objects.create_user(username=name, password=content)
+#         usr.password = new_user.password
+#         new_user.delete()
+#     usr.save()
+#     return JsonResponse({'errno': 0, 'msg': "修改成功"})
 
 
 # 获取用户信息
@@ -309,8 +343,8 @@ def repairService(request):
         repair.append(ret)
     taskCount['today'] = today_num
     data = {
-        'taskCount':taskCount,
-        'repair':repair
+        'taskCount': taskCount,
+        'repair': repair
     }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
