@@ -1086,7 +1086,59 @@ def add_payment(request):
         nowTimeArray = time.strptime(pay_time, "%Y-%m-%d")
         nowTimeStamp = str(int(time.mktime(nowTimeArray)))
         new_payment = Payment.objects.create(lease_id=lease, year=year, time=nowTimeStamp)
-        print(nowTimeStamp)
     else:
         new_payment = Payment.objects.create(lease_id=lease, year=year)
     return JsonResponse({'errno': 0, 'msg': "新增成功"})
+
+
+@csrf_exempt
+def change_payment(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    lease_id = request.POST.get('lease_id')
+    year = request.POST.get('year')
+    ispaid = request.POST.get('ispaid')
+    pay_time = request.POST.get('pay_time')
+    lease = Lease.objects.filter(id=lease_id).first()
+    if pay_time:
+        nowTimeArray = time.strptime(pay_time, "%Y-%m-%d")
+        nowTimeStamp = str(int(time.mktime(nowTimeArray)))
+        payment = Payment.objects.filter(lease_id=lease, year=year).first()
+        payment.time = nowTimeStamp
+        payment.save()
+    else:
+        payment = Payment.objects.filter(lease_id=lease, year=year).first()
+        payment.time = None
+    return JsonResponse({'errno': 0, 'msg': "修改成功"})
+
+
+@csrf_exempt
+def change_user_info(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    new_name = request.POST.get('new_name')
+    new_phone = request.POST.get('new_phone')
+    new_legal = request.POST.get('new_legal')
+    new_email = request.POST.get('new_email')
+    new_description = request.POST.get('new_description')
+    admin.name = new_name
+    admin.phone = new_phone
+    admin.legal_person = new_legal
+    admin.email = new_email
+    admin.description = new_description
+    admin.save()
+    return JsonResponse({'errno': 0, 'msg': "修改成功"})
