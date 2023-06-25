@@ -444,9 +444,9 @@ def get_client_info(request):
     for c in client:
         rooms = Lease.objects.filter(user_id=c.user_id)
         room_info = []
-        payment = []  # 需要修改数据库设计
         for r in rooms:
             payments = Payment.objects.filter(lease_id=r.id).all()
+            payment = []
             for p in payments:
                 if not p.time:
                     is_paid = False
