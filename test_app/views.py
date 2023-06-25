@@ -1120,9 +1120,7 @@ def send_sms(request):
     end = time.time() + 1860
     visits = Visitor.objects.filter(status=0).filter(visit_time__gte=start).filter(visit_time__lt=end)
     for visit in visits:
-        r = []
-        r.append(visit.phone)
-        r.append(str({"code": visit.password}))
+        r = [visit.phone, str({"code": visit.password})]
         code = dict(json.loads(Sample.main(r))).get('body').get('Code')
         if code == 'OK':
             visit.status = 1
