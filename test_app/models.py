@@ -54,6 +54,7 @@ class Wiki(models.Model):
     id = models.AutoField(primary_key=True)
     description = models.TextField(blank=True, null=True)  # 问题描述
     solution = models.TextField(blank=True, null=True)  # 解决方法
+    type = models.IntegerField(default=0)  # 问题类型 1:水  2:电  3:机械  4:其他
 
 
 class Room(models.Model):
