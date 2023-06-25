@@ -463,7 +463,8 @@ def get_client_info(request):
                 'start_time': datetime.fromtimestamp(r.start_time).strftime('%Y-%m-%d'),
                 'end_time': datetime.fromtimestamp(r.end_time).strftime('%Y-%m-%d'),
                 'sign_time': datetime.fromtimestamp(r.contract_time).strftime('%Y-%m-%d'),
-                'payment': payment
+                'payment': payment,
+                'lease_id': r.id
             }
             room_info.append(tmp)
 
