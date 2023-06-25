@@ -1027,3 +1027,29 @@ def visit_verify(request):
     if password != visitor.password:
         return JsonResponse({'errno': 1003, 'msg': "动态密码错误"})
     return JsonResponse({'errno': 0, 'msg': "认证成功"})
+
+
+@csrf_exempt
+def add_payment(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    lease_id = request.POST.get('lease_id')
+    year = request.POST.get('year')
+    ispaid = request.POST.get('ispaid')
+    pay_time = request.POST.get('pay_time')
+    lease = Lease.objects.filter(id=lease_id).first()
+    if pay_time:
+        nowTimeArray = time.strptime(pay_time, "%Y-%m-%d")
+        nowTimeStamp = str(int(time.mktime(nowTimeArray)))
+        new_payment = Payment.objects.create(lease_id=lease, year=year, time=nowTimeStamp)
+        print(nowTimeStamp)
+    else:
+        new_payment = Payment.objects.create(lease_id=lease, year=year)
+    return JsonResponse({'errno': 0, 'msg': "新增成功"})
