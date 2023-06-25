@@ -1142,3 +1142,4 @@ def change_user_info(request):
     admin.description = new_description
     admin.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
+
