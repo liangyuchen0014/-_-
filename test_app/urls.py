@@ -51,4 +51,5 @@ urlpatterns = [
     path('changeUserInfo', change_user_info),
     path('getWorkNumber', get_maintain_num),
     path('AddWorker', add_worker),
+    path('getVisitorNumber', get_visitor_num),
 ]

@@ -825,73 +825,87 @@ def get_visitor_num(request):
     visitors = Visitor.objects.all().order_by('-visit_time')
     # 按照最近14天统计
     data = []
-    visitors_week = []
+    sum_visitors_day = []
     for i in range(14):
         day = (datetime.now() - timedelta(days=(13 - i))).strftime('%Y-%m-%d')
-        visitors_week.append(0)
         ret = {
             'day': day,
             'number': 0
         }
-        visitors_week.append(ret)
+        sum_visitors_day.append(ret)
     for visitor in visitors:
-        day = visitor.visit_time.strftime('%Y-%m-%d')
+        day = datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m-%d')
+
         flag = False
-        for visitor_day in visitors_week:
-            if day == visitor_day.get('day'):
+        for visitor_day in sum_visitors_day:
+            if day == visitor_day['day']:
                 flag = True
                 visitor_day['number'] += 1
                 break
         if not flag:
             break
     # 按照最近12个月统计
-    visitors_month = []
+    sum_visitors_month = []
     for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
         month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
         ret = {
             'month': month,
             'number': 0
         }
-        visitors_month.append(ret)
+        sum_visitors_month.append(ret)
 
     for visitor in visitors:
-        month = visitor.visit_time.strftime('%Y-%m')
+        month = datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m')
         flag = False
-        for visitor_month in visitors_month:
-            if month == visitor_month.get('month'):
+        for visitor_month in sum_visitors_month:
+            if month == visitor_month['month']:
                 flag = True
                 visitor_month['number'] += 1
                 break
         if not flag:
             break
-    data.append(visitors_month)
-    # 按照最近5年统计
-    visitors_year = []
-    ret = {
-        'year': '',
-        'number': 0
-    }
-    for visitor in visitors:
-        year = visitor.visit_time.strftime('%Y')
-        flag = False
-        for visitor_year in visitors_year:
-            if year == visitor_year.get('year'):
-                flag = True
-                visitor_year['number'] += 1
-                break
-        if not flag:
-            ret['year'] = year
-            ret['number'] += 1
-            visitors_year.append(ret)
-            ret = {
-                'year': '',
-                'number': 0
-            }
-    data.append(visitors_year)
     # 按照公司统计，公司也按照最近14天，最近12个月统计
     # 公司列表
+    sum_company = []
     companies = Visitor.objects.values('company').distinct()
-    print(companies)
+    for company in companies:
+        company_name = company['company']
+        visitors_day = []
+        for i in range(14):
+            day = (datetime.now() - timedelta(days=(13 - i))).strftime('%Y-%m-%d')
+            ret = {
+                'day': day,
+                'number': 0
+            }
+            visitors_day.append(ret)
+        visitors_month = []
+        for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]:
+            month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
+            ret = {
+                'month': month,
+                'number': 0
+            }
+            visitors_month.append(ret)
+        sum_company.append({
+            'name': company_name,
+            'visitors_day': visitors_day,
+            'visitors_month': visitors_month
+        })
+    for visitor in visitors:
+        company_name = visitor.company
+        day = datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m-%d')
+        month = datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m')
+        for company in sum_company:
+            if company_name == company['name']:
+                for visitor_day in company['visitors_day']:
+                    if day == visitor_day['day']:
+                        visitor_day['number'] += 1
+                        break
+                for visitor_month in company['visitors_month']:
+                    if month == visitor_month['month']:
+                        visitor_month['number'] += 1
+                        break
+                break
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
