@@ -1170,8 +1170,11 @@ def add_worker(request):
 
 @csrf_exempt
 def send_sms(request):
-    t = time.time() + 1860
-    visits = Visitor.objects.filter(status=0).filter(visit_time__lt=t)
+    t = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
+    time_array = time.strptime(t, '%Y-%m-%d')
+    start = int(time.mktime(time_array))
+    end = time.time() + 1860
+    visits = Visitor.objects.filter(status=0).filter(visit_time__gte=start).filter(visit_time__lt=end)
     for visit in visits:
         r = []
         r.append(visit.phone)
