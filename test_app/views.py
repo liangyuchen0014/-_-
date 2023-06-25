@@ -1,11 +1,9 @@
 import json
-import random
 import time
 from datetime import datetime, timedelta
 
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
-
 from django.views.decorators.csrf import csrf_exempt
 from django_redis import get_redis_connection
 from rest_framework_jwt.settings import api_settings
