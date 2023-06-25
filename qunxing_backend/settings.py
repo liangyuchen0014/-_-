@@ -190,27 +190,27 @@ CORS_ALLOW_HEADERS = (
 )
 # 邮件相关配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 发送邮件配置
-EMAIL_HOST = 'smtp.qq.com'  # 服务器名称
+EMAIL_HOST = 'smtp.163.com'  # 服务器名称
 EMAIL_PORT = 25  # 服务端口
-EMAIL_HOST_USER = '2827668756@qq.com'  # 自己邮箱
-EMAIL_HOST_PASSWORD = 'fyneqbxjazfidehc'  # 在邮箱中设置的客户端授权密码
+EMAIL_HOST_USER = 'lightseeker157@163.com'  # 自己邮箱
+EMAIL_HOST_PASSWORD = 'CQCDWIKCIUFHHXOD'  # 在邮箱中设置的客户端授权密码
 EMAIL_FROM = '群星闪耀时'  # 收件人看到的发件人
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-EMAIL_USE_TLS = True  # 是否使用TLS安全传输协议
-# EMAIL_USE_SSL = True    #是否使用SSL加密，qq企业邮箱要求使用
-'''
+# EMAIL_USE_TLS = False  # 是否使用TLS安全传输协议
+# EMAIL_USE_SSL = True  # 是否使用SSL加密，qq企业邮箱要求使用
+
 CACHES = {
     # django存缓默认位置,redis 0号库
     # default: 连接名称
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/0",
+        "LOCATION": "redis://10.251.252.218:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
 }
-'''
+
 '''
     # django session存 reidis 1 号库（现在基本不需要使⽤）
     "session": {
@@ -229,9 +229,7 @@ CACHES = {
         }
     }
 '''
-'''
-# 配置session使⽤redis存储
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-# 配置session存储的位置: 使⽤cache中的
-SESSION_CACHE_ALIAS = "session"
-'''
+# # 配置session使⽤redis存储
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# # 配置session存储的位置: 使⽤cache中的
+# SESSION_CACHE_ALIAS = "session"
