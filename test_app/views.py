@@ -1,3 +1,4 @@
+import json
 import random
 import time
 from datetime import datetime, timedelta
@@ -11,6 +12,7 @@ from rest_framework_jwt.settings import api_settings
 
 from test_app.message import *
 from test_app.models import *
+from test_app.sms import Sample
 
 
 @csrf_exempt
@@ -885,7 +887,7 @@ def get_visitor_num(request):
             }
             visitors_day.append(ret)
         visitors_month = []
-        for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1,0]:
+        for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
             month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
             ret = {
                 'month': month,
@@ -974,7 +976,7 @@ def visit_apply(request):
     time_array = time.strptime(t, '%Y-%m-%d')
     start = int(time.mktime(time_array))
     end = start + 86400
-    visitor = Visitor.objects.filter(visit_time__gte=start).filter(visit_time__lt=end).first()
+    visitor = Visitor.objects.filter(number=number).filter(visit_time__gte=start).filter(visit_time__lt=end).first()
     if visitor:
         return JsonResponse({'errno': 1003, 'msg': "该访客已申请过"})
     password = '%06d' % random.randint(0, 999999)
@@ -1164,3 +1166,18 @@ def add_worker(request):
     except:
         return JsonResponse({'errno': 1002, 'msg': "添加失败"})
     return JsonResponse({'errno': 0, 'msg': "添加成功"})
+
+
+@csrf_exempt
+def send_sms(request):
+    t = time.time() + 1860
+    visits = Visitor.objects.filter(status=0).filter(visit_time__lt=t)
+    for visit in visits:
+        r = []
+        r.append(visit.phone)
+        r.append(str({"code": visit.password}))
+        code = dict(json.loads(Sample.main(r))).get('body').get('Code')
+        if code == 'OK':
+            visit.status = 1
+            visit.save()
+    return JsonResponse({'errno': 0, 'msg': "发送完成"})
