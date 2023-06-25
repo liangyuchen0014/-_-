@@ -1074,6 +1074,11 @@ def add_payment(request):
     ispaid = request.POST.get('ispaid')
     pay_time = request.POST.get('pay_time')
     lease = Lease.objects.filter(id=lease_id).first()
+    year = int(year)
+    start_year = int(datetime.fromtimestamp(lease.start_time).strftime('%Y'))
+    end_year = int(datetime.fromtimestamp(lease.end_time).strftime('%Y'))
+    if not start_year <= year and year <= end_year:
+        return JsonResponse({'errno': 1002, 'msg': "年份超出租赁时段"})
     if pay_time:
         nowTimeArray = time.strptime(pay_time, "%Y-%m-%d")
         nowTimeStamp = str(int(time.mktime(nowTimeArray)))
