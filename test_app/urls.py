@@ -45,5 +45,5 @@ urlpatterns = [
     path('userApply', visit_apply),
     path('autoDeliver', deliver),
     path('send_reminder', send_reminder),
-    path('addPayment', add_payment)
+    path('visit_verify', visit_verify),
 ]

@@ -1012,27 +1012,18 @@ def send_reminder(request):
 
 
 @csrf_exempt
-def add_payment(request):
+def visit_verify(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    token = request.POST.get('token')
-    admin_id = decode_token(token)
-    if admin_id == -1:
-        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-    admin = User.objects.filter(user_id=admin_id).first()
-    if not admin:
-        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-    lease_id = request.POST.get('lease_id')
-    year = request.POST.get('year')
-    ispaid = request.POST.get('ispaid')
-    pay_time = request.POST.get('pay_time')
-    lease = Lease.objects.filter(id=lease_id).first()
-    if pay_time:
-        nowTimeArray = time.strptime(pay_time, "%Y-%m-%d")
-        nowTimeStamp = str(int(time.mktime(nowTimeArray)))
-        new_payment = Payment.objects.create(lease_id=lease, year=year, time=nowTimeStamp)
-        print(nowTimeStamp)
-    else:
-        new_payment = Payment.objects.create(lease_id=lease, year=year)
-    return JsonResponse({'errno': 0, 'msg': "新增成功"})
-
+    password = request.POST.get('password')
+    number = request.POST.get('number')
+    t = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
+    time_array = time.strptime(t, '%Y-%m-%d')
+    start = int(time.mktime(time_array))
+    end = start + 86400
+    visitor = Visitor.objects.filter(number=number).filter(visit_time__gte=start).filter(visit_time__lt=end).first()
+    if not visitor:
+        return JsonResponse({'errno': 1002, 'msg': "未查询到申请记录"})
+    if password != visitor.password:
+        return JsonResponse({'errno': 1003, 'msg': "动态密码错误"})
+    return JsonResponse({'errno': 0, 'msg': "认证成功"})
