@@ -215,26 +215,27 @@ def repairReport(request):
     repair_time = time.time()
 
     period = int(request.POST.get('period'))
-    maintain_day = request.POST.get('maintain_time')
+    maintain_day = str(request.POST.get('maintain_day'))
     # 时间拼接
     start_time = ['08:00', '10:00', '14:00', '16:00']
     end_time = ['10:00', '12:00', '16:00', '18:00']
-    maintain_start_time = (maintain_day + ' ' + start_time[period - 1])
+    maintain_start_time = maintain_day + ' ' + start_time[period - 1]
     maintain_end_time = maintain_day + ' ' + end_time[period - 1]
     # 字符串转时间戳
     mst = datetime.strptime(maintain_start_time, '%Y-%m-%d %H:%M')
     met = datetime.strptime(maintain_end_time, '%Y-%m-%d %H:%M')
     maintain_start_time = mst.timestamp()
     maintain_end_time = met.timestamp()
+    maintain_day= time.mktime(time.strptime(maintain_day, "%Y-%m-%d"))
     if not all([user_id, name, phone, room_id, r_type, description, period, maintain_day]):
         return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     repair_form = RepairForm.objects.filter(room_id=room_id)
     for form in repair_form:
         if form.status == 0 or form.status == 1:
             return JsonResponse({'errno': 1004, 'msg': "该房间已报修"})
-    maintain_time = time.mktime(time.strptime(maintain_day, "%Y-%m-%d"))
+
     RepairForm.objects.create(company_id=user, company_name=user.name, contact_name=name, period=period,
-                              maintain_time=maintain_time, contact_phone=phone, room_id=room,
+                              maintain_day=maintain_day, contact_phone=phone, room_id=room,
                               type=r_type, description=description, repair_time=repair_time,
                               maintain_start_time=maintain_start_time, maintain_end_time=maintain_end_time)
     return JsonResponse({'errno': 0, 'msg': "报修成功"})
@@ -255,7 +256,7 @@ def myRepair(request):
     data = []
     for form in repair_form:
         res = form.get_info()
-        maintain_time = datetime.fromtimestamp(res['maintain_time']).strftime('%Y-%m-%d') + ' ' \
+        maintain_time = datetime.fromtimestamp(res['maintain_day']).strftime('%Y-%m-%d') + ' ' \
                         + datetime.fromtimestamp(res['maintain_start_time']).strftime('%H:%M') + '-' \
                         + datetime.fromtimestamp(res['maintain_end_time']).strftime('%H:%M')
         ret = {
@@ -264,7 +265,7 @@ def myRepair(request):
             'type': res['type'],
             'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
             'maintain_time': maintain_time,
-            'period': res['period'],
+            # 'period': res['period'],
             'status': res['status'],
             'maintainer_name': res['maintainer_name'],
             'maintainer_phone': res['maintainer_phone'],
@@ -287,10 +288,17 @@ def repairService(request):
     repair_form = RepairForm.objects.filter(maintainer_id=user_id)
     data = []
     today = datetime.today().strftime('%Y-%m-%d')
-    tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
-    print(today, tomorrow)
+    # tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
+    # print(today, tomorrow)
+    taskCount = {
+        'sum': repair_form.count(),
+        'today': [0, 0, 0, 0]
+    }
+    repair = []
     for form in repair_form:
         res = form.get_info()
+        if res['maintain_day'] == today:
+            taskCount['today'][res['period'] - 1] = 1
         ret = {
             'wid': res['id'],
             'repair_time': datetime.fromtimestamp(res['repair_time']).strftime('%Y-%m-%d %H:%M:%S'),
@@ -298,7 +306,9 @@ def repairService(request):
             'period': res['period'],
             'status': res['status']
         }
-        data.append(ret)
+        repair.append(ret)
+    data.append(taskCount)
+    data.append(repair)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
@@ -518,23 +528,25 @@ def setMaintainer(request):
     if repair_form.status != 0:
         return JsonResponse({'errno': 1004, 'msg': "报修单状态错误"})
 
-    maintain_time = request.POST.get('maintain_time')
+    maintain_day = request.POST.get('maintain_day')
+    period = request.POST.get('period')
     maintainer_name = request.POST.get('maintainer_name')
     maintainer_id = int(request.POST.get('maintainer_id'))
     maintainer_phone = request.POST.get('maintainer_phone')
 
-    # 维修工状态设为不空闲
-    maintainer = User.objects.filter(user_id=maintainer_id).first()
-    if not maintainer:
-        return JsonResponse({'errno': 1005, 'msg': "维修工不存在"})
-    maintainer.is_available = 0
-    maintainer.save()
+    # # 维修工状态设为不空闲
+    # maintainer = User.objects.filter(user_id=maintainer_id).first()
+    # if not maintainer:
+    #     return JsonResponse({'errno': 1005, 'msg': "维修工不存在"})
+    # maintainer.is_available = 0
+    # maintainer.save()
 
     # 将时间字符串转换为时间戳
-    dt = datetime.strptime(maintain_time, '%Y-%m-%d %H:%M:%S')
-    maintain_time = dt.timestamp()
+    dt = datetime.strptime(maintain_day, '%Y-%m-%d')
+    maintain_day = dt.timestamp()
 
-    repair_form.maintain_time = maintain_time
+    repair_form.maintain_day = maintain_day
+    repair_form.period = period
     repair_form.maintainer_name = maintainer_name
     repair_form.maintainer_id = maintainer_id
     repair_form.maintainer_phone = maintainer_phone
