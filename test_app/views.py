@@ -924,12 +924,16 @@ def get_visitor_num(request):
 
 @csrf_exempt
 def get_solution(request):
-    if request.method not in ['POST', 'GET']:
+    if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    issues = Wiki.objects.all()
+    t = request.POST.get('type')
+    if t:
+        issues = Wiki.objects.filter(type=t)
+    else:
+        issues = Wiki.objects.all()
     data = []
     for issue in issues:
-        data.append({'problem': issue.description, 'solution': issue.solution})
+        data.append({'problem': issue.description, 'solution': issue.solution, 'type': issue.type})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
@@ -940,7 +944,8 @@ def add_solution(request):
     token = request.POST.get('token')
     problem = request.POST.get('problem')
     solution = request.POST.get('solution')
-    if not all([token, problem, solution]):
+    t = request.POST.get('type')
+    if not all([token, problem, solution, t]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
     admin_id = decode_token(token)
     if admin_id == -1:
@@ -950,7 +955,7 @@ def add_solution(request):
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     if admin.type != -1:
         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
-    Wiki.objects.create(description=problem, solution=solution)
+    Wiki.objects.create(description=problem, solution=solution, type=t)
     return JsonResponse({'errno': 0, 'msg': "添加成功"})
 
 
@@ -1142,4 +1147,3 @@ def change_user_info(request):
     admin.description = new_description
     admin.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
-
