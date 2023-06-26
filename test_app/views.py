@@ -1011,7 +1011,8 @@ def deliver(request):
     forms = RepairForm.objects.filter(maintain_start_time=start_time)
     unavailables = []
     for form in forms:
-        unavailables.append(int(form.maintainer_id))
+        if form.maintainer_id:
+            unavailables.append(int(form.maintainer_id))
     types = []
     if type == 4:
         types = [1, 2, 3]
