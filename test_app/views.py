@@ -991,11 +991,14 @@ def deliver(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
-    type = int(request.POST.get('type'))
+    d_type = request.POST.get('type')
     period = int(request.POST.get('period'))
     maintain_time = request.POST.get('maintain_time')
-    if not all([token, type, period, maintain_time]):
+    if not all([token, d_type, period, maintain_time]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    print(d_type)
+    d_type = int(d_type)
+
     admin_id = decode_token(token)
     if admin_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
@@ -1004,7 +1007,7 @@ def deliver(request):
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     if admin.type != -1:
         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
-    if type not in [1, 2, 3, 4]:
+    if d_type not in [1, 2, 3, 4]:
         return JsonResponse({'errno': 1003, 'msg': "时间段错误"})
     time_array = time.strptime(maintain_time, '%Y-%m-%d')
     start_time = int(time.mktime(time_array)) + 21600 + period * 7200
@@ -1014,10 +1017,10 @@ def deliver(request):
         if form.maintainer_id:
             unavailables.append(int(form.maintainer_id))
     types = []
-    if type == 4:
+    if d_type == 4:
         types = [1, 2, 3]
     else:
-        types.append(type)
+        types.append(d_type)
     workers = User.objects.filter(type__in=types)
     for worker in workers:
         if worker.user_id not in unavailables:
