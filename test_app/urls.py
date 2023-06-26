@@ -52,4 +52,5 @@ urlpatterns = [
     path('AddWorker', add_worker),
     path('getVisitorNumber', get_visitor_num),
     path('send_sms', send_sms),
+    path('getStatistics', get_total_num)
 ]

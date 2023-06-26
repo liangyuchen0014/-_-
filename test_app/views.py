@@ -543,6 +543,11 @@ def setMaintainer(request):
     maintainer_id = int(request.POST.get('maintainer_id'))
     maintainer_phone = request.POST.get('maintainer_phone')
 
+    maintainer = User.objects.filter(user_id=maintainer_id).first()
+    if not maintainer:
+        return JsonResponse({'errno': 1005, 'msg': "维修工不存在"})
+    if maintainer.type != 1 and maintainer.type != 2 and maintainer.type != 3:
+        return JsonResponse({'errno': 1006, 'msg': "该用户不是维修工"})
     # # 维修工状态设为不空闲
     # maintainer = User.objects.filter(user_id=maintainer_id).first()
     # if not maintainer:
@@ -900,6 +905,40 @@ def get_visitor_num(request):
                         break
                 break
     data.extend(sum_company)
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+# 获取总访客数、今日访客数、总工单数、今日工单数
+@csrf_exempt
+def get_total_num(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    user_id = decode_token(token)
+    if user_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    user = User.objects.filter(user_id=user_id).first()
+    if not user:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+
+    visitors = Visitor.objects.all()
+    repair_forms = RepairForm.objects.all()
+    today = datetime.now().strftime('%Y-%m-%d')
+    today_visitors = []
+    today_repair_forms = []
+    for visitor in visitors:
+        if datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m-%d') == today:
+            today_visitors.append(visitor)
+    for repair_form in repair_forms:
+        if datetime.fromtimestamp(repair_form.repair_time).strftime('%Y-%m-%d') == today:
+            print(datetime.fromtimestamp(repair_form.repair_time).strftime('%Y-%m-%d'))
+            today_repair_forms.append(repair_form)
+    data = {
+        'total_visitors': len(visitors),
+        'today_visitors': len(today_visitors),
+        'total_repair_forms': len(repair_forms),
+        'today_repair_forms': len(today_repair_forms)
+    }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
