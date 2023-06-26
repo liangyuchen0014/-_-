@@ -992,12 +992,14 @@ def deliver(request):
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
     d_type = request.POST.get('type')
-    period = int(request.POST.get('period'))
+    period = request.POST.get('period')
     maintain_time = request.POST.get('maintain_time')
     if not all([token, d_type, period, maintain_time]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
     print(d_type)
+    print(period)
     d_type = int(d_type)
+    period = int(period)
 
     admin_id = decode_token(token)
     if admin_id == -1:
