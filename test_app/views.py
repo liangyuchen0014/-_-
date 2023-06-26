@@ -96,7 +96,7 @@ def change_user_info(request):
     if new_description:
         usr.description = new_description
     if new_email:
-        if User.objects.filter(email=new_email).first():
+        if usr.email != new_email and User.objects.filter(email=new_email).first():
             return JsonResponse({'errno': 1004, 'msg': "该邮箱已注册"})
         usr.email = new_email
     usr.save()
