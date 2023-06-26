@@ -124,18 +124,18 @@ def forget_password(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     email = request.POST.get('email')
-    rand_code = request.POST.get('rand_code')
+    # rand_code = request.POST.get('rand_code')
     new_password = request.POST.get('new_password')
-    if not all([email, rand_code, new_password]):
-        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+    # if not all([email, rand_code, new_password]):
+    #     return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     usr = User.objects.filter(email=email).first()
     if not usr:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    redis_default = get_redis_connection('default')
-    sms_code = redis_default.get(email)
-    sms_code = sms_code.decode()
-    if rand_code != sms_code:
-        return JsonResponse({'errno': 1004, 'msg': "验证码错误"})
+    # redis_default = get_redis_connection('default')
+    # sms_code = redis_default.get(email)
+    # sms_code = sms_code.decode()
+    # if rand_code != sms_code:
+    #     return JsonResponse({'errno': 1004, 'msg': "验证码错误"})
     usr.set_password(new_password)
     usr.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
@@ -737,7 +737,10 @@ def get_lease_room(request):
         res = room.get_info()
         if res['start_time'] < time.time() < res['end_time']:
             ret = {
-                'room_id': res['room_id']
+                'room_id': res['room_id'],
+                'start_time': datetime.fromtimestamp(res['start_time']).strftime('%Y-%m-%d'),
+                'end_time': datetime.fromtimestamp(res['end_time']).strftime('%Y-%m-%d'),
+                'repair_time': datetime.fromtimestamp(res['contract_time']).strftime('%Y-%m-%d')
             }
             data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
