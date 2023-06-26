@@ -993,6 +993,7 @@ def deliver(request):
     token = request.POST.get('token')
     type = int(request.POST.get('type'))
     print(type)
+    print('--------')
     period = int(request.POST.get('period'))
     maintain_time = request.POST.get('maintain_time')
     if not all([token, type, period, maintain_time]):
