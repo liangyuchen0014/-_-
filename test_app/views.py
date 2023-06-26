@@ -838,15 +838,10 @@ def get_visitor_num(request):
         sum_visitors_day.append(ret)
     for visitor in visitors:
         day = datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m-%d')
-
-        flag = False
         for visitor_day in sum_visitors_day:
             if day == visitor_day['day']:
-                flag = True
                 visitor_day['number'] += 1
                 break
-        if not flag:
-            break
     # 按照最近12个月统计
     sum_visitors_month = []
     for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
@@ -859,14 +854,10 @@ def get_visitor_num(request):
 
     for visitor in visitors:
         month = datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m')
-        flag = False
         for visitor_month in sum_visitors_month:
             if month == visitor_month['month']:
-                flag = True
                 visitor_month['number'] += 1
                 break
-        if not flag:
-            break
     ret = {
         'name': '总访客数',
         'visitors_day': sum_visitors_day,
