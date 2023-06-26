@@ -466,13 +466,18 @@ def get_client_info(request):
             for p in payments:
                 if not p.time:
                     is_paid = False
+                    tmp = {
+                        'year': str(p.year),
+                        'ispaid': is_paid,
+                        'pay_time': None
+                    }
                 else:
                     is_paid = True
-                tmp = {
-                    'year': str(p.year),
-                    'ispaid': is_paid,
-                    'pay_time': datetime.fromtimestamp(p.time).strftime('%Y-%m-%d')
-                }
+                    tmp = {
+                        'year': str(p.year),
+                        'ispaid': is_paid,
+                        'pay_time': datetime.fromtimestamp(p.time).strftime('%Y-%m-%d')
+                    }
                 payment.append(tmp)
             tmp = {
                 'id': r.room_id_id,
