@@ -41,6 +41,7 @@ urlpatterns = [
     path('deleteClientInfo', deleteClientInfo),
     path('getLeaseRoom', get_lease_room),
     path('getSolution', get_solution),
+    path('deleteSolution', del_solution),
     path('addSolution', add_solution),
     path('userApply', visit_apply),
     path('autoDeliver', deliver),

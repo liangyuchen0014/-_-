@@ -996,7 +996,7 @@ def get_solution(request):
         issues = Wiki.objects.all()
     data = []
     for issue in issues:
-        data.append({'problem': issue.description, 'solution': issue.solution, 'type': issue.type})
+        data.append({'id': issue.id, 'problem': issue.description, 'solution': issue.solution, 'type': issue.type})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
@@ -1020,6 +1020,29 @@ def add_solution(request):
         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
     Wiki.objects.create(description=problem, solution=solution, type=t)
     return JsonResponse({'errno': 0, 'msg': "添加成功"})
+
+
+@csrf_exempt
+def del_solution(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    issue_id = request.POST.get('id')
+    if not all([token, issue_id]):
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+    issue = Wiki.objects.filter(id=issue_id).first()
+    if not issue:
+        return JsonResponse({'errno': 1003, 'msg': "问题不存在"})
+    issue.delete()
+    return JsonResponse({'errno': 0, 'msg': "删除成功"})
 
 
 @csrf_exempt
@@ -1069,7 +1092,6 @@ def deliver(request):
 
     d_type = int(d_type)
     period = int(period)
-
 
     admin_id = decode_token(token)
     if admin_id == -1:
