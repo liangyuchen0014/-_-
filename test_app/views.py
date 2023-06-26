@@ -385,8 +385,6 @@ def repairComplete(request):
     user = User.objects.filter(user_id=user_id).first()
     if not user:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    user.is_available = 1
-    user.save()
 
     solver_name = user.name
     solver_id = user_id
@@ -985,13 +983,16 @@ def deliver(request):
     d_type = request.POST.get('type')
     period = request.POST.get('period')
     maintain_time = request.POST.get('maintain_time')
+    print(token)
     print(d_type)
     print(period)
+    print(maintain_time)
     if not all([token, d_type, period, maintain_time]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
 
     d_type = int(d_type)
     period = int(period)
+
 
     admin_id = decode_token(token)
     if admin_id == -1:
