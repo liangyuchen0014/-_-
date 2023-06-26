@@ -539,8 +539,8 @@ def setMaintainer(request):
     if repair_form.status != 0:
         return JsonResponse({'errno': 1004, 'msg': "报修单状态错误"})
 
-    maintain_day = request.POST.get('maintain_day')
-    period = request.POST.get('period')
+    maintain_day = request.POST.get('maintain_date')
+    period = request.POST.get('maintain_period')
     maintainer_name = request.POST.get('maintainer_name')
     maintainer_id = int(request.POST.get('maintainer_id'))
     maintainer_phone = request.POST.get('maintainer_phone')
