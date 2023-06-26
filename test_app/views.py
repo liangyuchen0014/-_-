@@ -824,7 +824,7 @@ def get_visitor_num(request):
     if request.method != 'GET':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     visitors = Visitor.objects.all().order_by('-visit_time')
-    data = []
+    get_sum_company_data = []
     # 按照最近14天统计
     sum_visitors_day = []
     for i in range(14):
@@ -841,6 +841,7 @@ def get_visitor_num(request):
                 visitor_day['number'] += 1
                 break
     # 按照最近12个月统计
+
     sum_visitors_month = []
     for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
         month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
@@ -861,7 +862,7 @@ def get_visitor_num(request):
         'visitors_day': sum_visitors_day,
         'visitors_month': sum_visitors_month
     }
-    data.append(ret)
+    get_sum_company_data.append(ret)
     # 按照公司统计，公司也按照最近14天，最近12个月统计
     # 公司列表
     sum_company = []
@@ -904,7 +905,29 @@ def get_visitor_num(request):
                         visitor_month['number'] += 1
                         break
                 break
-    data.extend(sum_company)
+    get_sum_company_data.extend(sum_company)
+    # 按照公司统计历史访客数，给出访客数前十名，不足十名的不给出
+    sum_company_history = []
+    for company in companies:
+        company_name = company['company']
+        ret = {
+            'name': company_name,
+            'number': 0
+        }
+        sum_company_history.append(ret)
+    for visitor in visitors:
+        company_name = visitor.company
+        for company in sum_company_history:
+            if company_name == company['name']:
+                company['number'] += 1
+                break
+    sum_company_history.sort(key=lambda x: x['number'], reverse=True)
+    sum_company_history = sum_company_history[:10]
+    data = {
+        'company': get_sum_company_data,
+        'company_total': sum_company_history
+    }
+
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
