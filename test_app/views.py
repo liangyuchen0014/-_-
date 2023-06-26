@@ -594,6 +594,7 @@ def repairList(request):
             'room_id': res['room_id'],
             'status': res['status'],
             'type': res['type'],
+            'description': res['description']
         }
         data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
@@ -1256,3 +1257,41 @@ def send_sms(request):
             visit.status = 1
             visit.save()
     return JsonResponse({'errno': 0, 'msg': "发送完成"})
+
+
+# 获取今日报修工单信息
+@csrf_exempt
+def get_today_repair(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1002, 'msg': "用户无权限"})
+    dt = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
+    time_array = time.strptime(dt, '%Y-%m-%d')
+    today = int(time.mktime(time_array))
+    tomorrow = today + 86400
+    repair_forms = RepairForm.objects.filter(status=0)
+    repairs = []
+    for repair_form in repair_forms:
+        if today < repair_form.repair_time < tomorrow:
+            repairs.append(repair_form)
+    data = []
+    for repair in repairs:
+        res = repair.get_info()
+        data.append({
+            'id': res['id'],
+            'contact_name': res['contact_name'],
+            'room_id': res['room_id'],
+            'description': res['description'],
+            'repair_time': res['repair_time'],
+            'contact_phone': res['contact_phone'],
+            'status': res['status']
+        })
+    return JsonResponse({'errno': 0, 'msg': "获取成功", 'data': data})
