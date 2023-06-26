@@ -741,11 +741,31 @@ def get_lease_room(request):
     for room in room_list:
         res = room.get_info()
         if res['start_time'] < time.time() < res['end_time']:
+            payment = Payment.objects.filter(lease_id=room.id).all()
+            payments = []
+            for p in payment:
+                if not p.time:
+                    is_paid = False
+                    tmp = {
+                        'year': str(p.year),
+                        'ispaid': is_paid,
+                        'pay_time': None
+                    }
+                else:
+                    is_paid = True
+                    tmp = {
+                        'year': str(p.year),
+                        'ispaid': is_paid,
+                        'pay_time': datetime.fromtimestamp(p.time).strftime('%Y-%m-%d')
+                    }
+                payments.append(tmp)
             ret = {
                 'room_id': res['room_id'],
                 'start_time': datetime.fromtimestamp(res['start_time']).strftime('%Y-%m-%d'),
                 'end_time': datetime.fromtimestamp(res['end_time']).strftime('%Y-%m-%d'),
-                'repair_time': datetime.fromtimestamp(res['contract_time']).strftime('%Y-%m-%d')
+                'repair_time': datetime.fromtimestamp(res['contract_time']).strftime('%Y-%m-%d'),
+                'payments': payments,
+                'lease_id': room.id
             }
             data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
