@@ -767,10 +767,8 @@ def get_maintain_num(request):
     for repair_form in repair_forms:
         year = datetime.fromtimestamp(repair_form.solve_time).strftime('%Y')
         status = int(repair_form.status)
-        flag = False
         for work_year in works_year:
             if year == work_year.get('year'):
-                flag = True
                 if status == 1:
                     work_year['number_water'] += 1
                 elif status == 2:
@@ -781,8 +779,6 @@ def get_maintain_num(request):
                     work_year['number_other'] += 1
                 work_year['number_total'] += 1
                 break
-        if not flag:
-            break
     # 按月份统计不同种类的维修工作的数量（yyyy-mm格式的字符串，按照时间倒序排列)
     works_month = []
     for i in [5, 4, 3, 2, 1, 0]:
@@ -798,10 +794,8 @@ def get_maintain_num(request):
     for repair_form in repair_forms:
         month = datetime.fromtimestamp(repair_form.solve_time).strftime('%Y-%m')
         status = int(repair_form.status)
-        flag = False
         for work_month in works_month:
             if month == work_month['month']:
-                flag = True
                 if status == 1:
                     work_month['number_water'] += 1
                 elif status == 2:
@@ -812,8 +806,6 @@ def get_maintain_num(request):
                     work_month['number_other'] += 1
                 work_month['number_total'] += 1
                 break
-        if not flag:
-            break
     data = {
         'works_year': works_year,
         'works_month': works_month
