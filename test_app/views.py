@@ -661,14 +661,43 @@ def del_lease(request):
     return JsonResponse({'errno': 0, 'msg': "删除成功"})
 
 
+# @csrf_exempt
+# def get_worker(request):
+#     if request.method != 'POST':
+#         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+#     token = request.POST.get('token')
+#     page = int(request.POST.get('page'))
+#     num = int(request.POST.get('numInOnePage'))
+#     if not all([token, page, num]):
+#         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+#     admin_id = decode_token(token)
+#     if admin_id == -1:
+#         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+#     admin = User.objects.filter(user_id=admin_id).first()
+#     if not admin:
+#         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+#     if admin.type != -1:
+#         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+#     workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
+#     r = []
+#     for worker in workers:
+#         t = time.time()
+#         form = RepairForm.objects.filter(maintainer_id=worker.user_id).filter(maintain_start_time__lte=t).filter(
+#             maintain_end_time__gte=t).filter(status__lt=2).first()
+#         k = 1
+#         if form:
+#             k = 0
+#         r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
+#                   'isMaintainer': worker.type != -1, 'category': str(worker.type), 'isAvailable': k})
+#     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
+
+
 @csrf_exempt
 def get_worker(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
-    page = int(request.POST.get('page'))
-    num = int(request.POST.get('numInOnePage'))
-    if not all([token, page, num]):
+    if not all([token]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
     admin_id = decode_token(token)
     if admin_id == -1:
@@ -678,7 +707,7 @@ def get_worker(request):
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     if admin.type != -1:
         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
-    workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
+    workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()
     r = []
     for worker in workers:
         t = time.time()
