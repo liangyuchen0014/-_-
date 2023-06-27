@@ -31,7 +31,8 @@ def register(request):
     usr = User.objects.filter(username=email).first()
     if usr:
         return JsonResponse({'errno': 1003, 'msg': "该邮箱已注册"})
-    new_user = User.objects.create_user(username=email, password=password, email=email)
+    new_user = User.objects.create_user(username=email, password=password, email=email, legal_person=legal_person,
+                                        company=company, phone=phone, name=name, post=post, type=type)
     return JsonResponse({'errno': 0, 'msg': "注册成功", 'data': new_user.get_info()})
 
 
