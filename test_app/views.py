@@ -850,8 +850,13 @@ def get_visitor_num(request):
             }
             visitors_day.append(ret)
         visitors_month = []
+        months_day = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
         for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
-            month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
+            month_today = datetime.now().month
+            sum_days = 0
+            for j in range(i):
+                sum_days += months_day[(month_today - j - 1) % 12]
+            month = (datetime.now() - timedelta(days=sum_days)).strftime('%Y-%m')
             ret = {
                 'month': month,
                 'number': 0

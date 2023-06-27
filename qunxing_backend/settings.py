@@ -210,26 +210,3 @@ CACHES = {
         }
     }
 }
-
-'''
-    # django session存 reidis 1 号库（现在基本不需要使⽤）
-    "session": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
-    # 图形验证码，存redis 2号库
-    "img_code": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/2",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-'''
-# # 配置session使⽤redis存储
-# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-# # 配置session存储的位置: 使⽤cache中的
-# SESSION_CACHE_ALIAS = "session"
