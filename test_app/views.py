@@ -1222,6 +1222,7 @@ def change_payment(request):
     else:
         payment = Payment.objects.filter(lease_id=lease, year=year).first()
         payment.time = None
+        payment.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
 
 
