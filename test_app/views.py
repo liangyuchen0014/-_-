@@ -786,7 +786,6 @@ def get_maintain_num(request):
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     repair_forms = RepairForm.objects.filter(status=2).order_by('-solve_time')
     # 按年份统计不同种类的维修工作的数量
-    data = []
     works_year = []
     for i in range(5):
         works_year.append({
@@ -799,16 +798,16 @@ def get_maintain_num(request):
         })
     for repair_form in repair_forms:
         year = datetime.fromtimestamp(repair_form.solve_time).strftime('%Y')
-        status = int(repair_form.status)
+        re_type = int(repair_form.type)
         for work_year in works_year:
             if year == work_year.get('year'):
-                if status == 1:
+                if re_type == 1:
                     work_year['number_water'] += 1
-                elif status == 2:
+                elif re_type == 2:
                     work_year['number_elec'] += 1
-                elif status == 3:
+                elif re_type == 3:
                     work_year['number_mecha'] += 1
-                elif status == 4:
+                elif re_type == 4:
                     work_year['number_other'] += 1
                 work_year['number_total'] += 1
                 break
@@ -831,16 +830,16 @@ def get_maintain_num(request):
         })
     for repair_form in repair_forms:
         month = datetime.fromtimestamp(repair_form.solve_time).strftime('%Y-%m')
-        status = int(repair_form.status)
+        re_type = int(repair_form.type)
         for work_month in works_month:
             if month == work_month['month']:
-                if status == 1:
+                if re_type == 1:
                     work_month['number_water'] += 1
-                elif status == 2:
+                elif re_type == 2:
                     work_month['number_elec'] += 1
-                elif status == 3:
+                elif re_type == 3:
                     work_month['number_mecha'] += 1
-                elif status == 4:
+                elif re_type == 4:
                     work_month['number_other'] += 1
                 work_month['number_total'] += 1
                 break
