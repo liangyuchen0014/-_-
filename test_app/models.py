@@ -34,13 +34,13 @@ class User(AbstractUser):
 class Payment(models.Model):
     id = models.AutoField(primary_key=True)
     year = models.IntegerField(null=True)  # 按年份给出物业费缴纳信息
-    lease_id = models.ForeignKey('Lease', on_delete=models.DO_NOTHING, null=True)  # 租赁信息id
+    lease_id = models.ForeignKey('Lease', on_delete=models.CASCADE, null=True)  # 租赁信息id
     time = models.BigIntegerField(null=True)  # 若时间为空则为未缴纳，不为空则已缴纳
 
 
 class Visitor(models.Model):
     id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 客户id
+    user_id = models.ForeignKey('User', on_delete=models.CASCADE, null=True)  # 客户id
     company = models.CharField(max_length=255, null=True)  # 公司
     name = models.CharField(max_length=255, null=True)  # 访客人员姓名
     number = models.CharField(max_length=255, null=True)  # 身份证号码
@@ -65,8 +65,8 @@ class Room(models.Model):
 
 class Lease(models.Model):
     id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 客户id(外键)
-    room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间号(外键)
+    user_id = models.ForeignKey('User', on_delete=models.CASCADE, null=True)  # 客户id(外键)
+    room_id = models.ForeignKey('Room', on_delete=models.CASCADE, null=True)  # 房间号(外键)
     start_time = models.BigIntegerField(null=True)  # 起租时间
     end_time = models.BigIntegerField(null=True)  # 终止时间
     contract_time = models.BigIntegerField(null=True)  # 签约时间
@@ -88,9 +88,9 @@ class RepairForm(models.Model):
     type = models.IntegerField(default=0)  # 问题类型 1:水  2:电  3:机械  4:其他
     repair_time = models.BigIntegerField(null=True)  # 报修时间
     period = models.IntegerField(default=0)  # 期望上门维修时间段  1: 8:00-10:00  2: 10:00-12:00  3: 14:00-16:00  4: 16:00-18:00
-    room_id = models.ForeignKey('Room', on_delete=models.DO_NOTHING, null=True)  # 房间id(外键)
+    room_id = models.ForeignKey('Room', on_delete=models.CASCADE, null=True)  # 房间id(外键)
     company_name = models.CharField(max_length=255, null=True)  # 报修公司名称
-    company_id = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)  # 报修公司id(外键)
+    company_id = models.ForeignKey('User', on_delete=models.CASCADE, null=True)  # 报修公司id(外键)
     contact_name = models.CharField(max_length=255, null=True)  # 报修联系人姓名
     contact_phone = models.CharField(max_length=255, null=True)  # 报修联系人电话
     maintain_day = models.BigIntegerField(null=True)  # 上门维修时间（日期 年月日）

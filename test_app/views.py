@@ -96,7 +96,7 @@ def change_user_info(request):
     if new_description:
         usr.description = new_description
     if new_email:
-        if User.objects.filter(email=new_email).first():
+        if usr.email != new_email and User.objects.filter(email=new_email).first():
             return JsonResponse({'errno': 1004, 'msg': "该邮箱已注册"})
         usr.email = new_email
     usr.save()
@@ -124,18 +124,18 @@ def forget_password(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     email = request.POST.get('email')
-    rand_code = request.POST.get('rand_code')
+    # rand_code = request.POST.get('rand_code')
     new_password = request.POST.get('new_password')
-    if not all([email, rand_code, new_password]):
-        return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
+    # if not all([email, rand_code, new_password]):
+    #     return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     usr = User.objects.filter(email=email).first()
     if not usr:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    redis_default = get_redis_connection('default')
-    sms_code = redis_default.get(email)
-    sms_code = sms_code.decode()
-    if rand_code != sms_code:
-        return JsonResponse({'errno': 1004, 'msg': "验证码错误"})
+    # redis_default = get_redis_connection('default')
+    # sms_code = redis_default.get(email)
+    # sms_code = sms_code.decode()
+    # if rand_code != sms_code:
+    #     return JsonResponse({'errno': 1004, 'msg': "验证码错误"})
     usr.set_password(new_password)
     usr.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
@@ -385,8 +385,6 @@ def repairComplete(request):
     user = User.objects.filter(user_id=user_id).first()
     if not user:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    user.is_available = 1
-    user.save()
 
     solver_name = user.name
     solver_id = user_id
@@ -466,13 +464,18 @@ def get_client_info(request):
             for p in payments:
                 if not p.time:
                     is_paid = False
+                    tmp = {
+                        'year': str(p.year),
+                        'ispaid': is_paid,
+                        'pay_time': None
+                    }
                 else:
                     is_paid = True
-                tmp = {
-                    'year': str(p.year),
-                    'ispaid': is_paid,
-                    'pay_time': datetime.fromtimestamp(p.time).strftime('%Y-%m-%d')
-                }
+                    tmp = {
+                        'year': str(p.year),
+                        'ispaid': is_paid,
+                        'pay_time': datetime.fromtimestamp(p.time).strftime('%Y-%m-%d')
+                    }
                 payment.append(tmp)
             tmp = {
                 'id': r.room_id_id,
@@ -534,12 +537,17 @@ def setMaintainer(request):
     if repair_form.status != 0:
         return JsonResponse({'errno': 1004, 'msg': "报修单状态错误"})
 
-    maintain_day = request.POST.get('maintain_day')
-    period = request.POST.get('period')
+    maintain_day = request.POST.get('maintain_date')
+    period = request.POST.get('maintain_period')
     maintainer_name = request.POST.get('maintainer_name')
     maintainer_id = int(request.POST.get('maintainer_id'))
     maintainer_phone = request.POST.get('maintainer_phone')
 
+    maintainer = User.objects.filter(user_id=maintainer_id).first()
+    if not maintainer:
+        return JsonResponse({'errno': 1005, 'msg': "维修工不存在"})
+    if maintainer.type != 1 and maintainer.type != 2 and maintainer.type != 3:
+        return JsonResponse({'errno': 1006, 'msg': "该用户不是维修工"})
     # # 维修工状态设为不空闲
     # maintainer = User.objects.filter(user_id=maintainer_id).first()
     # if not maintainer:
@@ -586,6 +594,7 @@ def repairList(request):
             'room_id': res['room_id'],
             'status': res['status'],
             'type': res['type'],
+            'description': res['description']
         }
         data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
@@ -656,14 +665,43 @@ def del_lease(request):
     return JsonResponse({'errno': 0, 'msg': "删除成功"})
 
 
+# @csrf_exempt
+# def get_worker(request):
+#     if request.method != 'POST':
+#         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+#     token = request.POST.get('token')
+#     page = int(request.POST.get('page'))
+#     num = int(request.POST.get('numInOnePage'))
+#     if not all([token, page, num]):
+#         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+#     admin_id = decode_token(token)
+#     if admin_id == -1:
+#         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+#     admin = User.objects.filter(user_id=admin_id).first()
+#     if not admin:
+#         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+#     if admin.type != -1:
+#         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+#     workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
+#     r = []
+#     for worker in workers:
+#         t = time.time()
+#         form = RepairForm.objects.filter(maintainer_id=worker.user_id).filter(maintain_start_time__lte=t).filter(
+#             maintain_end_time__gte=t).filter(status__lt=2).first()
+#         k = 1
+#         if form:
+#             k = 0
+#         r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
+#                   'isMaintainer': worker.type != -1, 'category': str(worker.type), 'isAvailable': k})
+#     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
+
+
 @csrf_exempt
 def get_worker(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
-    page = int(request.POST.get('page'))
-    num = int(request.POST.get('numInOnePage'))
-    if not all([token, page, num]):
+    if not all([token]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
     admin_id = decode_token(token)
     if admin_id == -1:
@@ -673,7 +711,7 @@ def get_worker(request):
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     if admin.type != -1:
         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
-    workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
+    workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()
     r = []
     for worker in workers:
         t = time.time()
@@ -704,8 +742,31 @@ def get_lease_room(request):
     for room in room_list:
         res = room.get_info()
         if res['start_time'] < time.time() < res['end_time']:
+            payment = Payment.objects.filter(lease_id=room.id).all()
+            payments = []
+            for p in payment:
+                if not p.time:
+                    is_paid = False
+                    tmp = {
+                        'year': str(p.year),
+                        'ispaid': is_paid,
+                        'pay_time': None
+                    }
+                else:
+                    is_paid = True
+                    tmp = {
+                        'year': str(p.year),
+                        'ispaid': is_paid,
+                        'pay_time': datetime.fromtimestamp(p.time).strftime('%Y-%m-%d')
+                    }
+                payments.append(tmp)
             ret = {
-                'room_id': res['room_id']
+                'room_id': res['room_id'],
+                'start_time': datetime.fromtimestamp(res['start_time']).strftime('%Y-%m-%d'),
+                'end_time': datetime.fromtimestamp(res['end_time']).strftime('%Y-%m-%d'),
+                'repair_time': datetime.fromtimestamp(res['contract_time']).strftime('%Y-%m-%d'),
+                'payments': payments,
+                'lease_id': room.id
             }
             data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
@@ -732,10 +793,8 @@ def get_maintain_num(request):
     for repair_form in repair_forms:
         year = datetime.fromtimestamp(repair_form.solve_time).strftime('%Y')
         status = int(repair_form.status)
-        flag = False
         for work_year in works_year:
             if year == work_year.get('year'):
-                flag = True
                 if status == 1:
                     work_year['number_water'] += 1
                 elif status == 2:
@@ -746,8 +805,6 @@ def get_maintain_num(request):
                     work_year['number_other'] += 1
                 work_year['number_total'] += 1
                 break
-        if not flag:
-            break
     # 按月份统计不同种类的维修工作的数量（yyyy-mm格式的字符串，按照时间倒序排列)
     works_month = []
     for i in [5, 4, 3, 2, 1, 0]:
@@ -763,10 +820,8 @@ def get_maintain_num(request):
     for repair_form in repair_forms:
         month = datetime.fromtimestamp(repair_form.solve_time).strftime('%Y-%m')
         status = int(repair_form.status)
-        flag = False
         for work_month in works_month:
             if month == work_month['month']:
-                flag = True
                 if status == 1:
                     work_month['number_water'] += 1
                 elif status == 2:
@@ -777,8 +832,6 @@ def get_maintain_num(request):
                     work_month['number_other'] += 1
                 work_month['number_total'] += 1
                 break
-        if not flag:
-            break
     data = {
         'works_year': works_year,
         'works_month': works_month
@@ -792,7 +845,7 @@ def get_visitor_num(request):
     if request.method != 'GET':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     visitors = Visitor.objects.all().order_by('-visit_time')
-    data = []
+    get_sum_company_data = []
     # 按照最近14天统计
     sum_visitors_day = []
     for i in range(14):
@@ -804,16 +857,12 @@ def get_visitor_num(request):
         sum_visitors_day.append(ret)
     for visitor in visitors:
         day = datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m-%d')
-
-        flag = False
         for visitor_day in sum_visitors_day:
             if day == visitor_day['day']:
-                flag = True
                 visitor_day['number'] += 1
                 break
-        if not flag:
-            break
     # 按照最近12个月统计
+
     sum_visitors_month = []
     for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
         month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
@@ -825,20 +874,16 @@ def get_visitor_num(request):
 
     for visitor in visitors:
         month = datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m')
-        flag = False
         for visitor_month in sum_visitors_month:
             if month == visitor_month['month']:
-                flag = True
                 visitor_month['number'] += 1
                 break
-        if not flag:
-            break
     ret = {
         'name': '总访客数',
         'visitors_day': sum_visitors_day,
         'visitors_month': sum_visitors_month
     }
-    data.append(ret)
+    get_sum_company_data.append(ret)
     # 按照公司统计，公司也按照最近14天，最近12个月统计
     # 公司列表
     sum_company = []
@@ -881,7 +926,63 @@ def get_visitor_num(request):
                         visitor_month['number'] += 1
                         break
                 break
-    data.extend(sum_company)
+    get_sum_company_data.extend(sum_company)
+    # 按照公司统计历史访客数，给出访客数前十名，不足十名的不给出
+    sum_company_history = []
+    for company in companies:
+        company_name = company['company']
+        ret = {
+            'name': company_name,
+            'number': 0
+        }
+        sum_company_history.append(ret)
+    for visitor in visitors:
+        company_name = visitor.company
+        for company in sum_company_history:
+            if company_name == company['name']:
+                company['number'] += 1
+                break
+    sum_company_history.sort(key=lambda x: x['number'], reverse=True)
+    sum_company_history = sum_company_history[:10]
+    data = {
+        'company': get_sum_company_data,
+        'company_total': sum_company_history
+    }
+
+    return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
+
+
+# 获取总访客数、今日访客数、总工单数、今日工单数
+@csrf_exempt
+def get_total_num(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    user_id = decode_token(token)
+    if user_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    user = User.objects.filter(user_id=user_id).first()
+    if not user:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+
+    visitors = Visitor.objects.all()
+    repair_forms = RepairForm.objects.all()
+    today = datetime.now().strftime('%Y-%m-%d')
+    today_visitors = []
+    today_repair_forms = []
+    for visitor in visitors:
+        if datetime.fromtimestamp(visitor.visit_time).strftime('%Y-%m-%d') == today:
+            today_visitors.append(visitor)
+    for repair_form in repair_forms:
+        if datetime.fromtimestamp(repair_form.repair_time).strftime('%Y-%m-%d') == today:
+            print(datetime.fromtimestamp(repair_form.repair_time).strftime('%Y-%m-%d'))
+            today_repair_forms.append(repair_form)
+    data = {
+        'total_visitors': len(visitors),
+        'today_visitors': len(today_visitors),
+        'total_repair_forms': len(repair_forms),
+        'today_repair_forms': len(today_repair_forms)
+    }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
@@ -896,7 +997,7 @@ def get_solution(request):
         issues = Wiki.objects.all()
     data = []
     for issue in issues:
-        data.append({'problem': issue.description, 'solution': issue.solution, 'type': issue.type})
+        data.append({'id': issue.id, 'problem': issue.description, 'solution': issue.solution, 'type': issue.type})
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
 
 
@@ -920,6 +1021,29 @@ def add_solution(request):
         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
     Wiki.objects.create(description=problem, solution=solution, type=t)
     return JsonResponse({'errno': 0, 'msg': "添加成功"})
+
+
+@csrf_exempt
+def del_solution(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    issue_id = request.POST.get('id')
+    if not all([token, issue_id]):
+        return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
+    issue = Wiki.objects.filter(id=issue_id).first()
+    if not issue:
+        return JsonResponse({'errno': 1003, 'msg': "问题不存在"})
+    issue.delete()
+    return JsonResponse({'errno': 0, 'msg': "删除成功"})
 
 
 @csrf_exempt
@@ -957,11 +1081,19 @@ def deliver(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
-    type = int(request.POST.get('type'))
-    period = int(request.POST.get('period'))
+    d_type = request.POST.get('type')
+    period = request.POST.get('period')
     maintain_time = request.POST.get('maintain_time')
-    if not all([token, type, period, maintain_time]):
+    print(token)
+    print(d_type)
+    print(period)
+    print(maintain_time)
+    if not all([token, d_type, period, maintain_time]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
+
+    d_type = int(d_type)
+    period = int(period)
+
     admin_id = decode_token(token)
     if admin_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
@@ -970,19 +1102,20 @@ def deliver(request):
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     if admin.type != -1:
         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
-    if type not in [1, 2, 3, 4]:
+    if d_type not in [1, 2, 3, 4]:
         return JsonResponse({'errno': 1003, 'msg': "时间段错误"})
     time_array = time.strptime(maintain_time, '%Y-%m-%d')
     start_time = int(time.mktime(time_array)) + 21600 + period * 7200
     forms = RepairForm.objects.filter(maintain_start_time=start_time)
     unavailables = []
     for form in forms:
-        unavailables.append(int(form.maintainer_id))
+        if form.maintainer_id:
+            unavailables.append(int(form.maintainer_id))
     types = []
-    if type == 4:
+    if d_type == 4:
         types = [1, 2, 3]
     else:
-        types.append(type)
+        types.append(d_type)
     workers = User.objects.filter(type__in=types)
     for worker in workers:
         if worker.user_id not in unavailables:
@@ -1124,3 +1257,41 @@ def send_sms(request):
             visit.status = 1
             visit.save()
     return JsonResponse({'errno': 0, 'msg': "发送完成"})
+
+
+# 获取今日报修工单信息
+@csrf_exempt
+def get_today_repair(request):
+    if request.method != 'POST':
+        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
+    token = request.POST.get('token')
+    admin_id = decode_token(token)
+    if admin_id == -1:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    admin = User.objects.filter(user_id=admin_id).first()
+    if not admin:
+        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
+    if admin.type != -1:
+        return JsonResponse({'errno': 1002, 'msg': "用户无权限"})
+    dt = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
+    time_array = time.strptime(dt, '%Y-%m-%d')
+    today = int(time.mktime(time_array))
+    tomorrow = today + 86400
+    repair_forms = RepairForm.objects.filter(status=0)
+    repairs = []
+    for repair_form in repair_forms:
+        if today < repair_form.repair_time < tomorrow:
+            repairs.append(repair_form)
+    data = []
+    for repair in repairs:
+        res = repair.get_info()
+        data.append({
+            'id': res['id'],
+            'contact_name': res['contact_name'],
+            'room_id': res['room_id'],
+            'description': res['description'],
+            'repair_time': res['repair_time'],
+            'contact_phone': res['contact_phone'],
+            'status': res['status']
+        })
+    return JsonResponse({'errno': 0, 'msg': "获取成功", 'data': data})
