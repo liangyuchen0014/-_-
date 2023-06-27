@@ -19,6 +19,12 @@ def register(request):
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     email = request.POST.get('email')
     password = request.POST.get('password')
+    legal_person = request.POST.get('legal_person')
+    company = request.POST.get('company')
+    phone = request.POST.get('phone')
+    name = request.POST.get('name')
+    post = request.POST.get('post')
+    type = request.POST.get('type')
     # all() 函数用于判断给定的可迭代参数 iterable 中的所有元素是否都为 TRUE，如果是返回 True，否则返回 False。
     if not all([password, email]):
         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
@@ -862,9 +868,11 @@ def get_visitor_num(request):
                 visitor_day['number'] += 1
                 break
     # 按照最近12个月统计
-
+    months_day = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
     sum_visitors_month = []
     for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
+        month_today = datetime.now().month
+        print(month_today)
         month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
         ret = {
             'month': month,
