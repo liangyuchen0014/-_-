@@ -198,7 +198,7 @@ def delete_client_info(request):
 
 # 客户报修
 @csrf_exempt
-def repair_report(request):
+def repairReport(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -245,7 +245,7 @@ def repair_report(request):
 
 # 客户查看报修申请记录
 @csrf_exempt
-def my_repair(request):
+def myRepair(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -279,7 +279,7 @@ def my_repair(request):
 
 # 维修工查看维修任务列表
 @csrf_exempt
-def repair_service(request):
+def repairService(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -317,7 +317,7 @@ def repair_service(request):
 
 # 维修工查看维修任务详情
 @csrf_exempt
-def repair_detail(request):
+def repairDetail(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -347,7 +347,7 @@ def repair_detail(request):
 
 # 维修工完成维修，提交记录
 @csrf_exempt
-def repair_complete(request):
+def repairComplete(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -495,7 +495,7 @@ def change_client_info(request):
 
 # 管理员设置维修工
 @csrf_exempt
-def set_maintainer(request):
+def setMaintainer(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -547,7 +547,7 @@ def set_maintainer(request):
 
 # 管理员查看维修单列表
 @csrf_exempt
-def repair_list(request):
+def repairList(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -569,7 +569,6 @@ def repair_list(request):
             'room_id': res['room_id'],
             'status': res['status'],
             'type': res['type'],
-            'description': res['description']
         }
         data.append(ret)
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
@@ -1208,41 +1207,3 @@ def send_sms(request):
             visit.status = 1
             visit.save()
     return JsonResponse({'errno': 0, 'msg': "发送完成"})
-
-
-# 获取今日报修工单信息
-@csrf_exempt
-def get_today_repair(request):
-    if request.method != 'POST':
-        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    token = request.POST.get('token')
-    admin_id = decode_token(token)
-    if admin_id == -1:
-        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-    admin = User.objects.filter(user_id=admin_id).first()
-    if not admin:
-        return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-    if admin.type != -1:
-        return JsonResponse({'errno': 1002, 'msg': "用户无权限"})
-    dt = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
-    time_array = time.strptime(dt, '%Y-%m-%d')
-    today = int(time.mktime(time_array))
-    tomorrow = today + 86400
-    repair_forms = RepairForm.objects.filter(status=0)
-    repairs = []
-    for repair_form in repair_forms:
-        if today < repair_form.repair_time < tomorrow:
-            repairs.append(repair_form)
-    data = []
-    for repair in repairs:
-        res = repair.get_info()
-        data.append({
-            'id': res['id'],
-            'contact_name': res['contact_name'],
-            'room_id': res['room_id'],
-            'description': res['description'],
-            'repair_time': res['repair_time'],
-            'contact_phone': res['contact_phone'],
-            'status': res['status']
-        })
-    return JsonResponse({'errno': 0, 'msg': "获取成功", 'data': data})
