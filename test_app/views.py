@@ -813,9 +813,14 @@ def get_maintain_num(request):
                 work_year['number_total'] += 1
                 break
     # 按月份统计不同种类的维修工作的数量（yyyy-mm格式的字符串，按照时间倒序排列)
+    months_day = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
     works_month = []
     for i in [5, 4, 3, 2, 1, 0]:
-        month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
+        month_today = datetime.now().month
+        sum_days = 0
+        for j in range(i):
+            sum_days += months_day[(month_today - j - 1) % 12]
+        month = (datetime.now() - timedelta(days=sum_days)).strftime('%Y-%m')
         works_month.append({
             'month': month,
             'number_water': 0,
@@ -873,8 +878,10 @@ def get_visitor_num(request):
     sum_visitors_month = []
     for i in [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
         month_today = datetime.now().month
-        print(month_today)
-        month = (datetime.now() - timedelta(days=30 * i)).strftime('%Y-%m')
+        sum_days = 0
+        for j in range(i):
+            sum_days += months_day[(month_today - j - 1) % 12]
+        month = (datetime.now() - timedelta(days=sum_days)).strftime('%Y-%m')
         ret = {
             'month': month,
             'number': 0
