@@ -185,7 +185,7 @@ def addNewClient(request):
 
 # 删除客户信息
 @csrf_exempt
-def deleteClientInfo(request):
+def delete_client_info(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     else:
@@ -199,7 +199,7 @@ def deleteClientInfo(request):
 
 # 客户报修
 @csrf_exempt
-def repairReport(request):
+def repair_report(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -246,7 +246,7 @@ def repairReport(request):
 
 # 客户查看报修申请记录
 @csrf_exempt
-def myRepair(request):
+def my_repair(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -280,7 +280,7 @@ def myRepair(request):
 
 # 维修工查看维修任务列表
 @csrf_exempt
-def repairService(request):
+def repair_service(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -320,7 +320,7 @@ def repairService(request):
 
 # 维修工查看维修任务详情
 @csrf_exempt
-def repairDetail(request):
+def repair_detail(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -372,7 +372,7 @@ def repairStart(request):
 
 # 维修工完成维修，提交记录
 @csrf_exempt
-def repairComplete(request):
+def repair_complete(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -520,7 +520,7 @@ def change_client_info(request):
 
 # 管理员设置维修工
 @csrf_exempt
-def setMaintainer(request):
+def set_maintainer(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
@@ -572,7 +572,7 @@ def setMaintainer(request):
 
 # 管理员查看维修单列表
 @csrf_exempt
-def repairList(request):
+def repair_list(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     token = request.POST.get('token')
