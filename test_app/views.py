@@ -131,18 +131,10 @@ def forget_password(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     email = request.POST.get('email')
-    # rand_code = request.POST.get('rand_code')
     new_password = request.POST.get('new_password')
-    # if not all([email, rand_code, new_password]):
-    #     return JsonResponse({'errno': 1003, 'msg': "参数不完整"})
     usr = User.objects.filter(email=email).first()
     if not usr:
         return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    # redis_default = get_redis_connection('default')
-    # sms_code = redis_default.get(email)
-    # sms_code = sms_code.decode()
-    # if rand_code != sms_code:
-    #     return JsonResponse({'errno': 1004, 'msg': "验证码错误"})
     usr.set_password(new_password)
     usr.save()
     return JsonResponse({'errno': 0, 'msg': "修改成功"})
@@ -171,7 +163,7 @@ def send_email_code(request):
 
 # 新增客户信息
 @csrf_exempt
-def addNewClient(request):
+def add_new_client(request):
     if request.method != 'POST':
         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
     new_name = request.POST.get('new_name')
@@ -295,10 +287,8 @@ def repair_service(request):
     if user_id == -1:
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     repair_form = RepairForm.objects.filter(maintainer_id=user_id)
-    data = []
     today = datetime.today().strftime('%Y-%m-%d')
-    tomorrow = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
-    taskCount = {
+    task_count = {
         'sum': repair_form.count(),
         'today': []
     }
@@ -317,9 +307,9 @@ def repair_service(request):
             'status': res['status']
         }
         repair.append(ret)
-    taskCount['today'] = today_num
+    task_count['today'] = today_num
     data = {
-        'taskCount': taskCount,
+        'taskCount': task_count,
         'repair': repair
     }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': data})
@@ -353,28 +343,6 @@ def repair_detail(request):
         'status': res['status']
     }
     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': ret})
-
-
-'''
-# 维修工进行维修
-@csrf_exempt
-def repairStart(request):
-    if request.method != 'POST':
-        return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-    user_id = request.POST.get('user_id')
-    user = User.objects.filter(user_id=user_id).first()
-    if not user:
-        return JsonResponse({'errno': 1002, 'msg': "用户不存在"})
-    wid = request.POST.get('wid')
-    repair_form = RepairForm.objects.filter(id=wid).first()
-    if not repair_form:
-        return JsonResponse({'errno': 1003, 'msg': "报修单不存在"})
-    if repair_form.status != 0:
-        return JsonResponse({'errno': 1004, 'msg': "报修单状态错误"})
-    repair_form.status = 1
-    repair_form.save()
-    return JsonResponse({'errno': 0, 'msg': "维修成功"})
-'''
 
 
 # 维修工完成维修，提交记录
@@ -670,37 +638,6 @@ def del_lease(request):
         return JsonResponse({'errno': 1006, 'msg': "合同不存在"})
     lease.delete()
     return JsonResponse({'errno': 0, 'msg': "删除成功"})
-
-
-# @csrf_exempt
-# def get_worker(request):
-#     if request.method != 'POST':
-#         return JsonResponse({'errno': 1001, 'msg': "请求方式错误"})
-#     token = request.POST.get('token')
-#     page = int(request.POST.get('page'))
-#     num = int(request.POST.get('numInOnePage'))
-#     if not all([token, page, num]):
-#         return JsonResponse({'errno': 1002, 'msg': "参数不完整"})
-#     admin_id = decode_token(token)
-#     if admin_id == -1:
-#         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-#     admin = User.objects.filter(user_id=admin_id).first()
-#     if not admin:
-#         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
-#     if admin.type != -1:
-#         return JsonResponse({'errno': 1005, 'msg': "用户无权限"})
-#     workers = User.objects.filter(type__in=[-1, 1, 2, 3]).all()[(page - 1) * num: page * num]
-#     r = []
-#     for worker in workers:
-#         t = time.time()
-#         form = RepairForm.objects.filter(maintainer_id=worker.user_id).filter(maintain_start_time__lte=t).filter(
-#             maintain_end_time__gte=t).filter(status__lt=2).first()
-#         k = 1
-#         if form:
-#             k = 0
-#         r.append({'user_id': worker.user_id, 'name': worker.name, 'tel': worker.phone, 'job': worker.post,
-#                   'isMaintainer': worker.type != -1, 'category': str(worker.type), 'isAvailable': k})
-#     return JsonResponse({'errno': 0, 'msg': "查询成功", 'data': r})
 
 
 @csrf_exempt
@@ -1195,7 +1132,6 @@ def add_payment(request):
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     lease_id = request.POST.get('lease_id')
     year = request.POST.get('year')
-    ispaid = request.POST.get('ispaid')
     pay_time = request.POST.get('pay_time')
     lease = Lease.objects.filter(id=lease_id).first()
     year = int(year)
@@ -1204,11 +1140,11 @@ def add_payment(request):
     if not start_year <= year and year <= end_year:
         return JsonResponse({'errno': 1002, 'msg': "年份超出租赁时段"})
     if pay_time:
-        nowTimeArray = time.strptime(pay_time, "%Y-%m-%d")
-        nowTimeStamp = str(int(time.mktime(nowTimeArray)))
-        new_payment = Payment.objects.create(lease_id=lease, year=year, time=nowTimeStamp)
+        now_time_array = time.strptime(pay_time, "%Y-%m-%d")
+        now_time_stamp = str(int(time.mktime(now_time_array)))
+        Payment.objects.create(lease_id=lease, year=year, time=now_time_stamp)
     else:
-        new_payment = Payment.objects.create(lease_id=lease, year=year)
+        Payment.objects.create(lease_id=lease, year=year)
     return JsonResponse({'errno': 0, 'msg': "新增成功"})
 
 
@@ -1225,14 +1161,13 @@ def change_payment(request):
         return JsonResponse({'errno': 1000, 'msg': "token校验失败"})
     lease_id = request.POST.get('lease_id')
     year = request.POST.get('year')
-    ispaid = request.POST.get('ispaid')
     pay_time = request.POST.get('pay_time')
     lease = Lease.objects.filter(id=lease_id).first()
     if pay_time:
-        nowTimeArray = time.strptime(pay_time, "%Y-%m-%d")
-        nowTimeStamp = str(int(time.mktime(nowTimeArray)))
+        now_time_array = time.strptime(pay_time, "%Y-%m-%d")
+        now_time_stamp = str(int(time.mktime(now_time_array)))
         payment = Payment.objects.filter(lease_id=lease, year=year).first()
-        payment.time = nowTimeStamp
+        payment.time = now_time_stamp
         payment.save()
     else:
         payment = Payment.objects.filter(lease_id=lease, year=year).first()

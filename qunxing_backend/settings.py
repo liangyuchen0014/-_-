@@ -195,7 +195,7 @@ EMAIL_HOST_USER = 'lightseeker157@163.com'  # 自己邮箱
 EMAIL_HOST_PASSWORD = 'CQCDWIKCIUFHHXOD'  # 在邮箱中设置的客户端授权密码
 EMAIL_FROM = '群星闪耀时'  # 收件人看到的发件人
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-# EMAIL_USE_TLS = False  # 是否使用TLS安全传输协议
+
 # EMAIL_USE_SSL = True  # 是否使用SSL加密，qq企业邮箱要求使用
 
 CACHES = {

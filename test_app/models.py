@@ -11,7 +11,6 @@ class User(AbstractUser):
     description = models.TextField(blank=True, null=True)
     post = models.CharField(max_length=255, null=True)  # 岗位
     type = models.IntegerField(default=0)  # 0:客户  1:水  2:电  3:机械  -1:管理人员
-    # is_available = models.IntegerField(default=1)  # 0:不空闲  1:空闲
     head_url = models.TextField(blank=True, null=True)
 
     def get_info(self):
